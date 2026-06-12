@@ -1,11 +1,12 @@
 import uuid
 
 from PySide6.QtCore import QItemSelectionModel, QSize, Qt, Signal
-from PySide6.QtGui import QAction, QFont
-from PySide6.QtWidgets import (QAbstractItemView, QGridLayout, QLabel, QStyle,
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import (QAbstractItemView, QGridLayout, QStyle,
                                QToolBar, QTreeWidgetItem, QTreeWidgetItemIterator)
 
 from ..abstracttreewidget import XkorAbstractTreeWidget
+from ..ui.typography import heading_label
 from ..athlete import XkorAthlete
 from ..exceptions import XkorSearchFailedException
 from ..group import XkorGroup
@@ -197,10 +198,7 @@ class XkorEventSetupWidget(XkorAbstractTreeWidget):
 
     def setupLayout(self, actions):
         # label
-        headingFont = QFont()
-        headingFont.setWeight(QFont.Bold)
-        label = QLabel("Set up groups")
-        label.setFont(headingFont)
+        label = heading_label("Set up groups", level=1, center=True)
 
         # tool bar
         toolBar = QToolBar()

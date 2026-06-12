@@ -1,14 +1,27 @@
 # PyInstaller spec for the xkoranate-CE macOS app bundle.
 # Build with: .venv/bin/pyinstaller --noconfirm xkoranate.spec
 
+from PyInstaller.utils.hooks import collect_all
+
+# qt-material (theme .xml/.css.template + fonts) and qtawesome (icon fonts +
+# charmaps) load data files at runtime — collect them or the frozen app crashes
+# at startup even though the dev run works.
+_datas, _binaries, _hiddenimports = [], [], []
+for _pkg in ("qt_material", "qtawesome"):
+    d, b, h = collect_all(_pkg)
+    _datas += d
+    _binaries += b
+    _hiddenimports += h
+
 a = Analysis(
     ["launcher.py"],
     pathex=[],
     datas=[
         ("sports", "sports"),
         ("xkoranate/icons", "xkoranate/icons"),
-    ],
-    hiddenimports=[],
+    ] + _datas,
+    binaries=_binaries,
+    hiddenimports=_hiddenimports,
     excludes=[
         # trim Qt modules the app never uses to keep the bundle small
         "PySide6.QtWebEngineCore", "PySide6.QtWebEngineWidgets", "PySide6.QtWebChannel",

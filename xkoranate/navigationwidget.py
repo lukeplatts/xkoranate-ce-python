@@ -2,7 +2,7 @@ import time
 import uuid
 
 from PySide6.QtCore import QItemSelectionModel, Qt, Signal
-from PySide6.QtGui import QAction, QFont, QPalette
+from PySide6.QtGui import QAction, QFont
 from PySide6.QtWidgets import QAbstractItemView, QFrame, QTreeWidgetItem
 
 from .abstracttreewidget import XkorAbstractTreeWidget
@@ -42,15 +42,10 @@ class XkorNavigationWidget(XkorAbstractTreeWidget):
         self.m_events = {}  # QUuid -> XkorEvent
         self.m_rpList = None
 
-        palette = self.palette()
-        palette.setColor(QPalette.Base, palette.alternateBase().color())
-        self.setPalette(palette)
-        self.setBackgroundRole(QPalette.Base)
-        self.setAutoFillBackground(True)
-        self.treeWidget.setPalette(palette)
+        # let the application theme own the sidebar background; just keep the
+        # frameless look and drop the native focus rect
         self.treeWidget.setFrameStyle(QFrame.NoFrame)
         self.treeWidget.setAttribute(Qt.WA_MacShowFocusRect, False)
-        self.treeWidget.setAutoFillBackground(True)
 
         self.treeWidget.setColumnCount(1)
         self.treeWidget.setHeaderHidden(True)

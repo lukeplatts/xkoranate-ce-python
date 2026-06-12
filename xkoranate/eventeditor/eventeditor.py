@@ -1,16 +1,20 @@
-from PySide6.QtCore import Signal
-from PySide6.QtWidgets import QGridLayout, QPushButton, QStackedLayout, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (QGridLayout, QLabel, QPushButton, QStackedLayout,
+                               QWidget)
 
 from ..event import XkorEvent
 from ..rplist import XkorRPList
 from ..signuplist import XkorSignupList
 from ..signuplisteditor.signuplisteditor import XkorSignupListEditor
 from ..sport import XkorSport
+from .. import theme
 from .competitionselector import XkorCompetitionSelector
 from .eventsetupwidget import XkorEventSetupWidget
 from .scorinatewidget import (XkorScorinateWidget, _cloneEvent, _cloneRPList,
                               _cloneSport)
 from .sportselector import XkorSportSelector
+
+_STEP_NAMES = ["Sport", "Signups", "Competition", "Groups", "Scorinate"]
 
 
 class XkorEventEditor(QWidget):
@@ -47,6 +51,7 @@ class XkorEventEditor(QWidget):
 
         if self.stack.currentIndex() < self.stack.count() - 1:  # go to the next widget
             self.stack.setCurrentIndex(self.stack.currentIndex() + 1)
+        self.updateStepIndicator()
 
     def goPrev(self):
         if self.stack.currentIndex() > 0:
@@ -55,6 +60,23 @@ class XkorEventEditor(QWidget):
         self.next.setDisabled(False)
         if self.stack.currentIndex() == 0:
             self.prev.setDisabled(True)
+        self.updateStepIndicator()
+
+    def updateStepIndicator(self):
+        # read-only reflection of the current stack page
+        active = self.stack.currentIndex()
+        parts = []
+        for i, name in enumerate(_STEP_NAMES):
+            if i == active:
+                parts.append(
+                    '<span style="color:%s; font-weight:600;">%d&nbsp;%s</span>'
+                    % (theme.ACCENT, i + 1, name))
+            else:
+                parts.append(
+                    '<span style="color:%s;">%d&nbsp;%s</span>'
+                    % (theme.MUTED, i + 1, name))
+        sep = '<span style="color:%s;">&nbsp;&nbsp;›&nbsp;&nbsp;</span>' % theme.MUTED
+        self.stepIndicator.setText(sep.join(parts))
 
     def initCompetitionSelector(self):
         self.competitionSelector = XkorCompetitionSelector()
@@ -76,22 +98,32 @@ class XkorEventEditor(QWidget):
         self.stack.addWidget(self.scorinateWidget)
         self.stack.setCurrentWidget(self.sportSelector)
 
+        # step indicator (a read-only breadcrumb above the stack)
+        self.stepIndicator = QLabel()
+        self.stepIndicator.setTextFormat(Qt.RichText)
+        self.stepIndicator.setAlignment(Qt.AlignCenter)
+        self.stepIndicator.setContentsMargins(0, 4, 0, 8)
+
         # navigation bar
         self.prev = QPushButton("Go Back")
         self.prev.setDisabled(True)
         self.prev.clicked.connect(self.goPrev)
         self.next = QPushButton("Continue")
         self.next.setDisabled(True)
+        self.next.setProperty("class", "primary")  # qt-material accent button
         self.next.clicked.connect(self.goNext)
 
         # main layout
         self.layout = QGridLayout(self)
-        self.layout.addLayout(self.stack, 0, 0, 1, 3)
-        self.layout.addWidget(self.prev, 1, 1)
-        self.layout.addWidget(self.next, 1, 2)
+        self.layout.addWidget(self.stepIndicator, 0, 0, 1, 3)
+        self.layout.addLayout(self.stack, 1, 0, 1, 3)
+        self.layout.addWidget(self.prev, 2, 1)
+        self.layout.addWidget(self.next, 2, 2)
         self.layout.setColumnStretch(0, 1093)
         self.layout.setColumnStretch(1, 0)
         self.layout.setColumnStretch(2, 0)
+
+        self.updateStepIndicator()
 
     def initScorinateWidget(self):
         self.scorinateWidget = XkorScorinateWidget()
@@ -133,6 +165,7 @@ class XkorEventEditor(QWidget):
         self.eventSetupWidget.setGroups([])
         self.scorinateWidget.clear()
         self.stack.setCurrentIndex(0)
+        self.updateStepIndicator()
 
         self.m_data = data
 

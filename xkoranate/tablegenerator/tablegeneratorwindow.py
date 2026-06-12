@@ -57,7 +57,8 @@ class XkorTableGeneratorWindow(QMainWindow):
         self.toolBar.addAction(self.generateAction)
 
         self.addToolBar(self.toolBar)
-        self.setUnifiedTitleAndToolBarOnMac(True)
+        if hasattr(self, "setUnifiedTitleAndToolBarOnMac"):
+            self.setUnifiedTitleAndToolBarOnMac(True)
 
     def closeEvent(self, event):
         if self.generator.close():

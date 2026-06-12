@@ -6,12 +6,18 @@ from .centralwidget import XkorCentralWidget
 from .icons import icon
 from .mainwindow import XkorMainWindow
 from .paths import sportsDir
+from . import theme
 from .variant import toStringList
 
 
 class XkorApplication(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
+
+        # modern light Material theme — must be applied before any widgets are
+        # constructed so themed palettes/metrics are in place from the start
+        theme.apply(self)
+
         self.tg = None
         self.modified = False
 

@@ -3,7 +3,7 @@ import time
 
 from PySide6.QtCore import QDir, QSize, Qt, Signal
 from PySide6.QtGui import QAction, QFont, QPixmap
-from PySide6.QtWidgets import (QComboBox, QFileDialog, QLabel, QMessageBox,
+from PySide6.QtWidgets import (QComboBox, QFileDialog, QMessageBox,
                                QPlainTextEdit, QStyle, QToolBar, QVBoxLayout,
                                QWidget)
 
@@ -15,6 +15,7 @@ from ..rplist import XkorRPList
 from ..signuplist import XkorSignupList
 from ..sport import XkorSport
 from ..startlist import XkorStartList
+from ..ui.typography import heading_label
 
 
 # Value-semantics helpers: these classes are passed by value in the C++ code,
@@ -94,10 +95,7 @@ class XkorScorinateWidget(QWidget):
         self.sl = XkorStartList()
 
         # label
-        headingFont = QFont()
-        headingFont.setWeight(QFont.Bold)
-        label = QLabel("Scorinate event")
-        label.setFont(headingFont)
+        label = heading_label("Scorinate event", level=1, center=True)
 
         # actions for scorinate widget buttons
         self.scorinateAction = QAction(icon("roll"), "Scorinate event", self)
