@@ -1,11 +1,11 @@
 import sys
 
 from PySide6.QtCore import QItemSelectionModel, QModelIndex, Qt, Signal
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QGridLayout, QLabel, QTreeView, QWidget
+from PySide6.QtWidgets import QGridLayout, QTreeView, QWidget
 
 from ..exceptions import XkorFileNotFoundException
 from ..sport import XkorSport
+from ..ui.typography import heading_label
 from .sportmodel import SPORT_DATA, SPORT_NAME, XkorSportModel
 
 
@@ -24,12 +24,8 @@ class XkorSportSelector(QWidget):
         self.sportView = QTreeView()
         self.sportView.setHeaderHidden(True)
 
-        headingFont = QFont()
-        headingFont.setWeight(QFont.Bold)
-
         self.layout = QGridLayout(self)
-        label = QLabel("Select sport")
-        label.setFont(headingFont)
+        label = heading_label("Select sport", level=1, center=True)
         self.layout.addWidget(label, 0, 0, Qt.AlignCenter)
         self.layout.addWidget(self.sportView, 1, 0)
         self.layout.setContentsMargins(0, 0, 0, 0)
