@@ -1,0 +1,7 @@
+.venv/
+build/
+dist/
+__pycache__/
+*.pyc
+*.egg-info/
+sports/.DS_Store

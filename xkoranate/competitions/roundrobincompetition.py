@@ -1,0 +1,275 @@
+import math
+import re
+import sys
+
+from xkoranate.competitions.abstractcompetition import XkorAbstractCompetition
+from xkoranate.variant import qNumber, toDouble, toInt, toList, toString, toUInt
+
+
+class XkorRoundRobinCompetition(XkorAbstractCompetition):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tables = []  # QList<XkorTable>
+
+    def hasOptionsWidget(self):
+        return True
+
+    def newOptionsWidget(self, competitionOptions):
+        from xkoranate.competitions.options.roundrobincompetitionoptions import XkorRoundRobinCompetitionOptions
+
+        return XkorRoundRobinCompetitionOptions(competitionOptions)
+
+    def scorinate(self, matchday):
+        from xkoranate.tablegenerator.table import XkorTable
+
+        if self.largestGroupSize(self.startList) > 0:  # if there are no teams, don’t bother!
+            # initialize the tables
+            self.tables = []
+            sortCriteria = self.tableSortCriteria()
+            groupNo = 0
+            for i in self.startList.groups:
+                t = XkorTable()
+                t.setColumns(self.generateTableColumns(i.name))
+                t.setMatches(self.retrieveMatches(groupNo))
+                t.setSortCriteria(sortCriteria)
+                t.setPointsForWin(toInt(self.userOpt.get("pointsForWin")) if "pointsForWin" in self.userOpt else 3)
+                t.setPointsForDraw(toInt(self.userOpt.get("pointsForDraw")) if "pointsForDraw" in self.userOpt else 1)
+                t.setPointsForLoss(toInt(self.userOpt.get("pointsForLoss")) if "pointsForLoss" in self.userOpt else 0)
+                self.tables.append(t)
+                groupNo += 1
+
+            # initialize the results in the resume file options
+            self.resumeOpt["tableData"] = self.userOpt.get("tableData")
+
+            numberOfLegs = 1
+            if "numberOfLegs" in self.userOpt:
+                numberOfLegs = toUInt(self.userOpt.get("numberOfLegs"))  # noqa: F841 (unused in the C++ too)
+
+            self.scorinateMatchday(matchday)
+            self.resultsBuf[matchday] = self.resultsBuf.get(matchday, "") + "\n"
+
+    def generateFixtures(self, matchday, groupSize):
+        # account for possibility of more than two legs
+        reverseFixtures = (matchday % (2 * (groupSize - 1)) >= groupSize - 1)  # if we’re in the 2nd, 4th, … leg, reverse home/away
+        matchday %= (groupSize - 1)
+
+        matchesPerRound = groupSize // 2
+        fixtures = []
+
+        # mix up the fixtures a bit
+        round_ = matchday // 2
+        if matchday & 1:
+            round_ += groupSize // 2
+
+        for m in range(matchesPerRound):
+            home = (round_ + m) % (groupSize - 1)
+            away = (groupSize - 1 - m + round_) % (groupSize - 1)
+            if m == 0:
+                away = groupSize - 1
+
+            # flip the fixtures if:
+            # if this is the first match of an odd matchday, flip so that the last team isn’t always away
+            # if we’re on an even-numbered leg (reverseFixtures is set)
+            # if both of these are true, “flip it twice,” i.e., don’t flip it (thus use of xor)
+            if (m == 0 and (matchday & 1) != 0) != reverseFixtures:
+                fixtures.append((away, home))
+            else:
+                fixtures.append((home, away))
+
+        return fixtures
+
+    def generateTableColumns(self, groupName):
+        from xkoranate.tablegenerator.tablecolumn import XkorTableColumn
+
+        columns = []
+
+        nameWidth = self.nameWidth()
+        if len(groupName) > nameWidth:
+            nameWidth = len(groupName)
+        matchdayWidth = int(math.log10(self.matchdays())) + 1
+        positionWidth = int(math.log10(self.largestGroupSize(self.startList))) + 1
+        opt = self.sport.paradigmOptions()
+
+        sortCriteria = self.tableSortCriteria()
+        usesGoalAverage = "goalAverage" in sortCriteria
+        usesGoalDifference = "goalDifference" in sortCriteria
+        usesGoalsAgainst = "goalsAgainst" in sortCriteria
+        usesGoalsFor = "goalsFor" in sortCriteria
+        usesWinPercent = "winPercent" in sortCriteria
+        usesWinPercentPure = "winPercentPure" in sortCriteria
+        usesWinPercentNFL = "winPercentNFL" in sortCriteria
+        usesPoints = "points" in sortCriteria
+
+        columns.append(XkorTableColumn("position", "", positionWidth))
+        columns.append(XkorTableColumn("name", groupName, nameWidth))
+        columns.append(XkorTableColumn("played", toString(opt.get("tableHeaderPlayed", "Pld")), matchdayWidth + 2))
+        columns.append(XkorTableColumn("wins", toString(opt.get("tableHeaderWins", "W")), matchdayWidth + 2))
+        if toString(opt.get("forceTieBreak")) != "1" and toString(self.userOpt.get("allowDraws")) != "false":
+            columns.append(XkorTableColumn("draws", toString(opt.get("tableHeaderDraws", "D")), matchdayWidth + 1))
+        columns.append(XkorTableColumn("losses", toString(opt.get("tableHeaderLosses", "L")), matchdayWidth + 1))
+        if usesGoalAverage or usesGoalDifference or usesGoalsAgainst or usesGoalsFor:
+            columns.append(XkorTableColumn("goalsFor", toString(opt.get("tableHeaderGoalsFor", "PF")), matchdayWidth + 3))
+            columns.append(XkorTableColumn("goalsAgainst", toString(opt.get("tableHeaderGoalsAgainst", "PA")), matchdayWidth + 2))
+        if usesGoalAverage:
+            columns.append(XkorTableColumn("goalAverage", toString(opt.get("tableHeaderGoalAverage", "Avg")), 7))
+        if usesGoalDifference:
+            columns.append(XkorTableColumn("goalDifference", toString(opt.get("tableHeaderGoalDifference", "PD")), matchdayWidth + 2))
+        if usesWinPercent:
+            columns.append(XkorTableColumn("winPercent", toString(opt.get("tableHeaderWinPercent", "Win %")), 8))
+        if usesWinPercentPure:
+            columns.append(XkorTableColumn("winPercentPure", toString(opt.get("tableHeaderWinPercent", "Win %")), 8))
+        if usesWinPercentNFL:
+            columns.append(XkorTableColumn("winPercentNFL", toString(opt.get("tableHeaderWinPercent", "Win %")), 8))
+        if usesPoints:
+            columns.append(XkorTableColumn("points", toString(opt.get("tableHeaderPoints", "Pts")), matchdayWidth + 3))
+        if toString(self.userOpt.get("showResultsGrid")) == "true":
+            columns.append(XkorTableColumn("resultsGrid", "", self.largestGroupSize(self.startList) * 5))
+
+        return columns
+
+    def largestGroupSize(self, sl):
+        rval = 0
+        for i in sl.groups:
+            if len(i.athletes) > rval:
+                rval = len(i.athletes)
+        if rval & 1:
+            rval += 1  # rval should be even
+        return rval
+
+    def matchdays(self):
+        if "numberOfLegs" in self.userOpt:
+            return toInt(self.userOpt.get("numberOfLegs")) * (self.largestGroupSize(self.startList) - 1)
+        else:
+            return self.largestGroupSize(self.startList) - 1
+
+    def matchdayNames(self):
+        rval = []
+        for i in range(self.matchdays()):
+            rval.append("Matchday " + str(i + 1))
+        return rval
+
+    def retrieveMatches(self, groupNo):
+        from xkoranate.tablegenerator.tablematch import XkorTableMatch
+
+        rval = []
+
+        if "tableData" in self.userOpt:
+            tableData = toList(self.userOpt.get("tableData"))
+            if len(tableData) > groupNo:
+                results = toList(tableData[groupNo])
+                for i in results:
+                    rx = re.search("[0-9]+: (.+) ([0-9.]+)–([0-9.]+) (.+)", toString(i))  # match scores of form “1: Aquilla 3–1 Busby”
+                    if rx is not None:  # if we matched
+                        rval.append(XkorTableMatch(rx.group(1), rx.group(4), toDouble(rx.group(2)), toDouble(rx.group(3))))
+        return rval
+
+    def revertToMatchday(self, matchday):
+        # “matchday” is the first that will be erased
+        # delete the results
+        for k in list(self.resultsBuf.keys()):
+            if k >= matchday:
+                self.resultsBuf[k] = ""
+
+        # sort out the table data
+        tableData = toList(self.userOpt.get("tableData"))
+        for idx in range(len(tableData)):
+            groupData = toList(tableData[idx])
+            for j in range(len(groupData)):
+                rx = re.search("([0-9]+): (.+ [0-9.]+–[0-9.]+ .+)", toString(groupData[j]))  # find out what matchday the score is from
+                if rx is not None and toDouble(rx.group(1)) >= matchday:  # if it’s on “matchday” or later…
+                    groupData[j] = ""  # …blank the value
+            # actually delete the blanked values
+            groupData = [x for x in groupData if x != ""]
+            tableData[idx] = groupData
+        self.resumeOpt["tableData"] = tableData
+        return dict(self.resumeOpt)
+
+    def scorinateMatchday(self, matchday):
+        from xkoranate.paradigms.paradigmfactory import XkorParadigmFactory
+
+        localParadigmOptions = dict(self.paradigmOpt)
+        localParadigmOptions["nameWidth"] = self.nameWidth()
+
+        p = XkorParadigmFactory.newParadigmForSport(self.sport, localParadigmOptions)
+
+        fixtures = self.generateFixtures(matchday, self.largestGroupSize(self.startList))
+
+        tableData = toList(self.resumeOpt.get("tableData"))
+
+        # make sure we have a place to insert matches to
+        while len(tableData) < len(self.startList.groups):
+            tableData.append([])
+
+        groupNo = 0
+        for i in self.startList.groups:
+            athletes = []
+            groupData = toList(tableData[groupNo])
+            groupSize = len(i.athletes)
+
+            for j in fixtures:
+                if j[0] < groupSize and j[1] < groupSize:
+                    athletes.append(i.athletes[j[0]])
+                    athletes.append(i.athletes[j[1]])
+
+            p.scorinate(athletes)
+
+            if toString(self.userOpt.get("allowDraws")) == "false":
+                # if there’s a tie, deal with it
+                results = list(p.results())
+                for j in range(0, len(results) - (len(results) % 2), 2):
+                    score1 = results[j]
+                    score2 = results[j + 1]
+                    if p.compare(score1, score2) == 0:
+                        tiebreakAthletes = [score1.athlete, score2.athlete]
+                        p.breakTie(tiebreakAthletes)
+
+            self.resultsBuf[matchday] = self.resultsBuf.get(matchday, "") + i.name + "\n" + p.output() + "\n"
+
+            # assemble teh tablez
+            tiebreakers = toList(p.option("tiebreakers"))
+            tiebreakerNames = toList(p.option("tiebreakerNames"))
+            for j in fixtures:
+                if j[0] < groupSize and j[1] < groupSize:
+                    score1 = p.findResult(i.athletes[j[0]].id)
+                    score2 = p.findResult(i.athletes[j[1]].id)
+
+                    # find the score we want, from the last tiebreaker
+                    scoreValue1 = score1.score()
+                    scoreValue2 = score2.score()
+                    print(scoreValue1, scoreValue2, file=sys.stderr)
+                    if toString(self.userOpt.get("allowDraws")) == "false":
+                        usedTiebreakerNames = []  # if we put extraTime + goldenGoal under the same “OT” name, we don’t want to add it twice
+                        for k in range(len(tiebreakerNames)):
+                            name = toString(tiebreakerNames[k])
+                            currentTiebreaker = toString(tiebreakers[k]) if k < len(tiebreakers) else ""
+                            # shootout scores don’t belong in tables
+                            if currentTiebreaker != "shootout" and name not in usedTiebreakerNames and (score1.contains(name) or score2.contains(name)):
+                                scoreValue1 += toDouble(score1.value(name))
+                                scoreValue2 += toDouble(score2.value(name))
+                                print("adding", currentTiebreaker, toDouble(score1.value(name)), toDouble(score2.value(name)), file=sys.stderr)
+                                usedTiebreakerNames.append(name)
+                    self.tables[groupNo].insertMatch(i.athletes[j[0]].name, i.athletes[j[1]].name, scoreValue1, scoreValue2)
+
+                    # insert into the resume options
+                    groupData.append(str(matchday) + ": " + i.athletes[j[0]].name + " " + qNumber(scoreValue1) + "–" + qNumber(scoreValue2) + " " + i.athletes[j[1]].name)
+
+            self.tables[groupNo].generate()
+            tableData[groupNo] = groupData
+            self.resultsBuf[matchday] = self.resultsBuf.get(matchday, "") + self.tables[groupNo].toText()
+            self.resultsBuf[matchday] = self.resultsBuf.get(matchday, "") + "\n"
+
+            groupNo += 1
+        self.resumeOpt["tableData"] = tableData
+
+    def tableSortCriteria(self):
+        rval = []
+
+        if "sortCriteria" in self.userOpt:
+            criteria = toList(self.userOpt.get("sortCriteria"))
+            for i in criteria:
+                rval.append(toString(i))
+        else:
+            from xkoranate.tablegenerator.sortcriteriawidget import XkorSortCriteriaWidget
+
+            rval = XkorSortCriteriaWidget.defaultSortCriteria()
+        return rval

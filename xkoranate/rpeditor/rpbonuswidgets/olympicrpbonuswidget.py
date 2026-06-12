@@ -1,0 +1,59 @@
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QHeaderView, QTreeWidgetItemIterator
+
+from ...variant import qNumber, toDouble
+from ..abstractrpbonuswidget import XkorAbstractRPBonusWidget
+from .olympicrpbonusdelegate import XkorOlympicRPBonusDelegate
+
+
+class XkorOlympicRPBonusWidget(XkorAbstractRPBonusWidget):
+    def __init__(self):
+        super().__init__()
+        self.treeWidget.setColumnCount(2)
+        self.treeWidget.setSortingEnabled(True)
+        self._delegate = XkorOlympicRPBonusDelegate()
+        self.treeWidget.setItemDelegate(self._delegate)
+        self.treeWidget.sortItems(0, Qt.AscendingOrder)
+        self.setUseTeamBonus()
+
+        # set the column widths
+        self.treeWidget.header().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.treeWidget.header().setSectionResizeMode(1, QHeaderView.Fixed)
+        self.treeWidget.header().resizeSection(1, 100)
+
+        actions = [self.insertAction, self.deleteAction]
+        self.setupLayout(actions)
+
+    def insertionText(self):
+        return "Add nation"
+
+    def deletionText(self):
+        return "Remove nations"
+
+    def bonuses(self):
+        rval = {}
+        i = QTreeWidgetItemIterator(self.treeWidget)
+        while i.value():
+            item = i.value()
+            properties = {"bonus": toDouble(item.text(1))}
+            rval[item.text(0)] = properties
+            i += 1
+        return rval
+
+    def initItem(self, item, nation="", bonus=0):
+        item.setText(0, nation)
+        item.setText(1, qNumber(bonus))
+
+    def setBonuses(self, bonuses):
+        self.clear()
+        for key, value in bonuses.items():
+            self.initItem(self.createItem(), key, value.get("bonus", 0.0))
+        self.listChanged.emit()
+
+    def setUseParticipantBonus(self, use=True):
+        if use:
+            self.treeWidget.setHeaderLabels(["Participant", "Bonus"])
+
+    def setUseTeamBonus(self, use=True):
+        if use:
+            self.treeWidget.setHeaderLabels(["Team", "Bonus"])

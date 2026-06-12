@@ -1,0 +1,211 @@
+from PySide6.QtCore import Signal
+from PySide6.QtWidgets import QGridLayout, QPushButton, QStackedLayout, QWidget
+
+from ..event import XkorEvent
+from ..rplist import XkorRPList
+from ..signuplist import XkorSignupList
+from ..signuplisteditor.signuplisteditor import XkorSignupListEditor
+from ..sport import XkorSport
+from .competitionselector import XkorCompetitionSelector
+from .eventsetupwidget import XkorEventSetupWidget
+from .scorinatewidget import (XkorScorinateWidget, _cloneEvent, _cloneRPList,
+                              _cloneSport)
+from .sportselector import XkorSportSelector
+
+
+class XkorEventEditor(QWidget):
+    dataChanged = Signal()
+    resultExportDirectoryChanged = Signal(str)
+    signupListDirectoryChanged = Signal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.selectionModel = None
+        self.stack = None
+        self.signupListEditor = None
+        self.isLoading = False
+
+        self.m_data = XkorEvent()
+        self.m_rpList = XkorRPList()
+        self.sport = XkorSport()
+
+        self.initCompetitionSelector()
+        self.initSportSelector()
+        self.initSignupListEditor()
+        self.initScorinateWidget()
+
+        self.initEventSetupWidget()
+
+        self.initLayout()
+
+    def goNext(self):
+        self.prev.setDisabled(False)
+        if self.stack.currentIndex() == self.stack.count() - 2:  # we’re headed for the scorinate widget
+            self.updateData()
+            self.scorinateWidget.setEvent(self.m_data, self.m_rpList, self.sport)
+            self.next.setDisabled(True)
+
+        if self.stack.currentIndex() < self.stack.count() - 1:  # go to the next widget
+            self.stack.setCurrentIndex(self.stack.currentIndex() + 1)
+
+    def goPrev(self):
+        if self.stack.currentIndex() > 0:
+            self.stack.setCurrentIndex(self.stack.currentIndex() - 1)
+
+        self.next.setDisabled(False)
+        if self.stack.currentIndex() == 0:
+            self.prev.setDisabled(True)
+
+    def initCompetitionSelector(self):
+        self.competitionSelector = XkorCompetitionSelector()
+        self.competitionSelector.competitionChanged.connect(self.updateCompetition)
+        self.competitionSelector.competitionOptionsChanged.connect(self.updateCompetitionOptions)
+
+    def initEventSetupWidget(self):
+        self.eventSetupWidget = XkorEventSetupWidget()
+        self.eventSetupWidget.listChanged.connect(self.setDataChanged)
+        self.signupListEditor.itemDeleted.connect(self.eventSetupWidget.deleteAthlete)
+
+    def initLayout(self):
+        # stacked layout
+        self.stack = QStackedLayout()
+        self.stack.addWidget(self.sportSelector)
+        self.stack.addWidget(self.signupListEditor)
+        self.stack.addWidget(self.competitionSelector)
+        self.stack.addWidget(self.eventSetupWidget)
+        self.stack.addWidget(self.scorinateWidget)
+        self.stack.setCurrentWidget(self.sportSelector)
+
+        # navigation bar
+        self.prev = QPushButton("Go Back")
+        self.prev.setDisabled(True)
+        self.prev.clicked.connect(self.goPrev)
+        self.next = QPushButton("Continue")
+        self.next.setDisabled(True)
+        self.next.clicked.connect(self.goNext)
+
+        # main layout
+        self.layout = QGridLayout(self)
+        self.layout.addLayout(self.stack, 0, 0, 1, 3)
+        self.layout.addWidget(self.prev, 1, 1)
+        self.layout.addWidget(self.next, 1, 2)
+        self.layout.setColumnStretch(0, 1093)
+        self.layout.setColumnStretch(1, 0)
+        self.layout.setColumnStretch(2, 0)
+
+    def initScorinateWidget(self):
+        self.scorinateWidget = XkorScorinateWidget()
+        self.scorinateWidget.resumeFileOptionsSet.connect(self.setResumeFileOptions)
+        self.scorinateWidget.resultConfirmed.connect(self.setResult)
+        self.scorinateWidget.resultExportDirectoryChanged.connect(self.setResultExportDirectory)
+
+    def initSignupListEditor(self):
+        self.signupListEditor = XkorSignupListEditor()
+        self.signupListEditor.dataChanged.connect(self.updateSignupList)
+        self.signupListEditor.signupListDirectoryChanged.connect(self.setSignupListDirectory)
+
+    def initSportSelector(self):
+        self.sportSelector = XkorSportSelector()
+        self.sportSelector.sportChanged.connect(self.updateSport)
+        self.sportSelector.paradigmOptionsChanged.connect(self.updateParadigmOptions)
+
+    def loadSports(self):
+        self.sportSelector.updateSportList()
+
+    def data(self):
+        self.updateData()
+        return _cloneEvent(self.m_data)  # XkorEvent is returned by value in the C++
+
+    def setData(self, data, rpList):
+        # XkorEvent and XkorRPList are passed by value in the C++
+        data = _cloneEvent(data)
+        rpList = _cloneRPList(rpList)
+
+        self.isLoading = True  # prevent dataChanged from being emitted
+
+        self.m_rpList = rpList
+
+        # hit the reset button
+        self.eventSetupWidget.clear()
+        self.sportSelector.setSelectedSport("")
+        self.signupListEditor.setData(XkorSignupList())
+        self.competitionSelector.setSport(XkorSport(), {})
+        self.eventSetupWidget.setGroups([])
+        self.scorinateWidget.clear()
+        self.stack.setCurrentIndex(0)
+
+        self.m_data = data
+
+        self.sportSelector.setParadigmOptions(data.paradigmOptions())
+        self.sportSelector.setSelectedSport(data.sport())
+        # updateSport is called implicitly by sportSelector->setSelectedSport
+        self.competitionSelector.setSport(self.sport, data.competitionOptions())
+        self.competitionSelector.setCompetition(data.competition())
+        self.scorinateWidget.setEvent(self.m_data, self.m_rpList, self.sport)
+
+        # signup lists
+        self.signupListEditor.setData(data.signupList())
+
+        # athletes
+        self.eventSetupWidget.setSignupList(data.signupList())
+        self.eventSetupWidget.setGroups(data.groups())
+
+        self.isLoading = False  # allow dataChanged to be emitted if the user does stuff
+
+    def setDataChanged(self):
+        if not self.isLoading:
+            self.dataChanged.emit()
+
+    def setResult(self, matchday, result):
+        self.m_data.setResult(matchday, result)
+        self.setDataChanged()
+
+    def setResultExportDirectory(self, dir):
+        self.resultExportDirectoryChanged.emit(dir)
+
+    def setResumeFileOptions(self, options):
+        self.m_data.replaceCompetitionOptions(options)
+        self.setDataChanged()
+
+    def setSignupListDirectory(self, dir):
+        self.signupListDirectoryChanged.emit(dir)
+
+    def updateCompetition(self, competition):
+        self.m_data.setCompetition(competition)
+        self.setDataChanged()
+
+    def updateCompetitionOptions(self, options):
+        self.m_data.setCompetitionOptions(options)
+        self.setDataChanged()
+
+    def updateData(self):
+        # bring the event up-to-date with whatever’s been going on in the GUI
+        self.m_data.setSignupList(self.signupListEditor.data())
+        self.m_data.setGroups(self.eventSetupWidget.groups())
+
+    def updateParadigmOptions(self, options):
+        # update the signup list editor
+        self.signupListEditor.setSport(self.sport, options)
+        self.m_data.setParadigmOptions(options)
+        self.setDataChanged()
+
+    def updateSignupList(self):
+        self.m_data.setSignupList(self.signupListEditor.data())
+        self.eventSetupWidget.setSignupList(self.signupListEditor.data())
+        self.setDataChanged()
+
+    def updateSport(self, s):
+        self.sport = _cloneSport(s)  # XkorSport is passed by value in the C++
+        self.m_data.setSport(self.sport.name(), self.sport.paradigm())
+        if self.sport.name() != "":
+            self.next.setEnabled(True)
+        else:
+            self.next.setEnabled(False)
+
+        # update the signup list editor
+        self.signupListEditor.setSport(self.sport, self.m_data.paradigmOptions())
+        self.competitionSelector.setSport(self.sport, self.m_data.competitionOptions())
+        self.setDataChanged()
+
+    def updateSportList(self):
+        self.sportSelector.updateSportList()
