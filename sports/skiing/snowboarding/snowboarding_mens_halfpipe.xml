@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sport version="0.3">
+	<name>Snowboarding—Men’s halfpipe</name>
+	<discipline>Snowboarding</discipline>
+	<event>Men’s halfpipe</event>
+	<scorinator/>
+	
+	<paradigm>scored</paradigm>
+	<paradigmOptions>
+		<int type="resultWidth">6</int>
+		<int type="displayDigits">2</int>
+           <double type="roundingValue">0.25</double>
+		<string type="sortOrder">descending</string>
+	</paradigmOptions>
+	
+	<dataPoints name="score">
+		<dataPoint pos="0.008065">4.5</dataPoint>
+		<dataPoint pos="0.016129">12</dataPoint>
+		<dataPoint pos="0.096774">20</dataPoint>
+		<dataPoint pos="0.233871">29.25</dataPoint>
+		<dataPoint pos="0.330645">40</dataPoint>
+		<dataPoint pos="0.435484">49.25</dataPoint>
+		<dataPoint pos="0.532258">60.75</dataPoint>
+		<dataPoint pos="0.661290">69.75</dataPoint>
+		<dataPoint pos="0.798387">79.5</dataPoint>
+		<dataPoint pos="0.927419">90</dataPoint>
+		<dataPoint pos="0.991935">95.75</dataPoint>
+	</dataPoints>
+</sport>

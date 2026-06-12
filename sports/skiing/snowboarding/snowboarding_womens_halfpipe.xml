@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sport version="0.3">
+	<name>Snowboarding—Women’s halfpipe</name>
+	<discipline>Snowboarding</discipline>
+	<event>Women’s halfpipe</event>
+	<scorinator/>
+	
+	<paradigm>scored</paradigm>
+	<paradigmOptions>
+		<int type="resultWidth">6</int>
+		<int type="displayDigits">2</int>
+           <double type="roundingValue">0.25</double>
+		<string type="sortOrder">descending</string>
+	</paradigmOptions>
+	
+	<dataPoints name="score">
+		<dataPoint pos="0.009804">14</dataPoint>
+		<dataPoint pos="0.039126">20.5</dataPoint>
+		<dataPoint pos="0.166667">29</dataPoint>
+		<dataPoint pos="0.323529">39.75</dataPoint>
+		<dataPoint pos="0.460784">48.75</dataPoint>
+		<dataPoint pos="0.588235">58.5</dataPoint>
+		<dataPoint pos="0.705882">70</dataPoint>
+		<dataPoint pos="0.813725">80</dataPoint>
+		<dataPoint pos="0.901961">88</dataPoint>
+		<dataPoint pos="0.990196">95</dataPoint>
+	</dataPoints>
+</sport>
