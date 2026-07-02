@@ -28,6 +28,8 @@ class XkorMatchesCompetition(XkorAbstractCompetition):
             for home in range(0, size, 2):
                 lines.append(self._formatFixture(i.athletes[home], i.athletes[home + 1]))
             lines.append("")
+        if not lines:
+            return ""
         return "\n".join(lines).rstrip("\n") + "\n"
 
     def scorinate(self, matchday):
