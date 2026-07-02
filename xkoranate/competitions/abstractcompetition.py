@@ -51,6 +51,30 @@ class XkorAbstractCompetition:
     def newOptionsWidget(self, options):
         return None
 
+    def matchOdds(self, matchday, trials=1000):
+        """Per-fixture win/draw/loss percentages for the given matchday,
+        estimated from skills alone (no results required). Returns None
+        for competition types or paradigms that don't support a head-to-head
+        odds estimate (e.g. individually-scored events)."""
+        return None
+
+    def supportsOdds(self):
+        return False
+
+    def _formatAthleteName(self, athlete):
+        showTLAs = toString(self.paradigmOpt.get("showTLAs", "true")) == "true"
+        if showTLAs and athlete.nation:
+            return "%s (%s)" % (athlete.name, athlete.nation)
+        return athlete.name
+
+    def _formatOdds(self, paradigm, home, away, trials):
+        odds = paradigm.estimateOdds(home, away, trials)
+        return "%s v %s — %s %.0f%%  Draw %.0f%%  %s %.0f%%" % (
+            self._formatAthleteName(home), self._formatAthleteName(away),
+            self._formatAthleteName(home), odds["win"] * 100,
+            odds["draw"] * 100,
+            self._formatAthleteName(away), odds["loss"] * 100)
+
     def rankedListOutput(self, title, results, comparator):
         rankDigits = (int(math.log10(len(results))) + 1) if len(results) > 0 else 1
         rval = " " * (rankDigits + 1) + title + "\n"

@@ -101,11 +101,16 @@ class XkorScorinateWidget(QWidget):
         self.exportResultsAction.setEnabled(False)
         self.exportResultsAction.triggered.connect(lambda: self.exportResults())
 
+        self.oddsAction = icon_action("odds", "View match odds", self)
+        self.oddsAction.setEnabled(False)
+        self.oddsAction.triggered.connect(self.viewOdds)
+
         # toolbar
         toolBar = QToolBar()
         small = self.style().pixelMetric(QStyle.PM_SmallIconSize)
         toolBar.setIconSize(QSize(small, small))
         toolBar.addAction(self.scorinateAction)
+        toolBar.addAction(self.oddsAction)
         toolBar.addAction(self.exportResultsAction)
 
         self.matchday = QComboBox()
@@ -139,6 +144,7 @@ class XkorScorinateWidget(QWidget):
         self.textedit.setPlainText("")
         self.matchday.clear()
         self.matchday.hide()
+        self.oddsAction.setEnabled(False)
 
     def exportResults(self, filename=None):
         # C++ overloads: exportResults() shows the dialog; exportResults(QString) writes
@@ -253,6 +259,8 @@ class XkorScorinateWidget(QWidget):
         else:
             self.matchday.show()
 
+        self.oddsAction.setEnabled(self.c.supportsOdds())
+
         self.lastMatchday = -1
         for i in range(len(matchdayNames)):
             if self.c.results(i) != "":
@@ -276,6 +284,15 @@ class XkorScorinateWidget(QWidget):
 
     def updateResults(self, matchday):
         self.textedit.setPlainText(self._formatResults(self.c.results(matchday)))
+
+    def viewOdds(self):
+        if self.c is None:
+            return
+        odds = self.c.matchOdds(self.matchday.currentIndex())
+        if odds is None:
+            return
+        self.textedit.setPlainText(self._formatResults(odds))
+        self.exportResultsAction.setEnabled(True)
 
     def _formatResults(self, text):
         if self.bbcodeCheckBox.isChecked() and text != "":

@@ -78,6 +78,35 @@ class XkorRoundRobinCompetition(XkorAbstractCompetition):
 
         return fixtures
 
+    def supportsOdds(self):
+        return self._oddsParadigm() is not None
+
+    def matchOdds(self, matchday, trials=1000):
+        p = self._oddsParadigm()
+        groupSize = self.largestGroupSize(self.startList)
+        if p is None or groupSize == 0:
+            return None
+
+        fixtures = self.generateFixtures(matchday, groupSize)
+        lines = []
+        for i in self.startList.groups:
+            size = len(i.athletes)
+            pairs = [(h, a) for h, a in fixtures if h < size and a < size]
+            if not pairs:
+                continue
+            if len(self.startList.groups) > 1:
+                lines.append(i.name)
+            for home, away in pairs:
+                lines.append(self._formatOdds(p, i.athletes[home], i.athletes[away], trials))
+        return "\n".join(lines) + ("\n" if lines else "")
+
+    def _oddsParadigm(self):
+        from xkoranate.paradigms.abstracth2hparadigm import XkorAbstractH2HParadigm
+        from xkoranate.paradigms.paradigmfactory import XkorParadigmFactory
+
+        p = XkorParadigmFactory.newParadigmForSport(self.sport, dict(self.paradigmOpt))
+        return p if isinstance(p, XkorAbstractH2HParadigm) else None
+
     def generateTableColumns(self, groupName):
         from xkoranate.tablegenerator.tablecolumn import XkorTableColumn
 
