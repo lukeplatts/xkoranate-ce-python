@@ -33,7 +33,10 @@ class XkorXmlIndex:
         # iterate
         while i.hasNext():
             f = i.next()
-            if i.fileInfo().isFile():
+            # sport definitions are always .xml — the directory also holds
+            # non-sport files (READMEs, notes) that would otherwise get fed
+            # to the XML parser and fail noisily on every launch
+            if i.fileInfo().isFile() and i.fileInfo().suffix().lower() == "xml":
                 self.insert(f)
 
     def lookup(self, name):

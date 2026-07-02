@@ -54,6 +54,19 @@ Windows/Linux). Sport parameter files are plain XML and remain user-editable
 there. The PyInstaller spec also bundles the `qdarktheme` and `qtawesome`
 data files so the theme and icons work in the frozen app.
 
+On Linux, PyInstaller only bundles a shared library into `dist/` if it can
+resolve it (via `ldd`) on the *build* machine — anything missing there is
+silently left out, and the resulting binary still builds fine but exits
+instantly the moment anyone runs it, with no visible error. `.venv` needs the
+full transitive dependency list installed before building for the shipped
+binary to be self-contained (see the apt-get list in
+`.github/workflows/release.yml`, which is CI-verified by launching the built
+binary inside a bare container). The only two libraries that can't be
+bundled this way are `libEGL`/`libGL` — Qt loads them via `dlopen` rather
+than linking them, so PyInstaller can never detect or bundle them. They're
+left to resolve from the host's graphics driver, which every real Linux
+desktop already provides — end users don't need to install anything.
+
 Tagged releases (`v*`) trigger `.github/workflows/release.yml`, which builds
 all three platforms in CI and attaches the zipped artifacts to a draft GitHub
 release. See [ROADMAP.md](ROADMAP.md) for the Windows-support feasibility

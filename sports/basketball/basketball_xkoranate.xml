@@ -2,7 +2,7 @@
 <sport version="0.3">
 	<name>Basketball—xkoranate formula</name>
 	<discipline>Basketball</discipline>
-	<event>FIBA Rules<event/> 
+	<event>FIBA Rules</event>
 	<scorinator/>
 	
 	<paradigm>xkoranate-h2h</paradigm>
