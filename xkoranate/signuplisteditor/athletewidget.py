@@ -98,14 +98,21 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
             with f:
                 for line in f.read().splitlines():
                     l = line.split(";")
-                    if len(l) == 3:
+                    if len(l) >= 3:
                         athleteName = l[0].strip()
                         athleteNation = l[1].strip()
                         athleteSkill = l[2].strip()
 
+                        # any columns beyond name/nation/skill (e.g. style
+                        # mods) are matched positionally to the paradigm's
+                        # extra column keys
+                        properties = {}
+                        for i in range(3, min(len(l), len(self.m_columnKeys))):
+                            properties[self.m_columnKeys[i]] = l[i].strip()
+
                         self.initItem(self.createItem(), athleteName,
                                       uuid.UUID(int=self.r._r.getrandbits(128)),
-                                      athleteNation, toDouble(athleteSkill))
+                                      athleteNation, toDouble(athleteSkill), properties)
 
             path = QDir(filename)
             path.cdUp()
