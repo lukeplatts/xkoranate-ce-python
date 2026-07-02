@@ -27,7 +27,15 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
 
     def newOptionsWidget(self, paradigmOptions):
         from .options.lisaparadigmoptions import XkorLISAParadigmOptions
-        return XkorLISAParadigmOptions(paradigmOptions)
+        return XkorLISAParadigmOptions(paradigmOptions, self._defaultHomeAdvantageEAR())
+
+    def _defaultHomeAdvantageEAR(self):
+        return toDouble(self.opt.get("homeAdvantageEAR", 100))
+
+    def homeAdvantageEAR(self):
+        # the sport file provides a default magnitude; the options widget
+        # lets the user override it per-event
+        return toDouble(self.userOpt.get("homeAdvantageEAR", self._defaultHomeAdvantageEAR()))
 
     # protected: LISA math helpers
 
@@ -42,8 +50,7 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
 
     def _homeAwayEAR(self, homeAthlete, awayAthlete):
         homeAdvantage = (toString(self.userOpt.get("homeAdvantage")) == "true")
-        homeAdvantageEAR = toDouble(self.opt.get("homeAdvantageEAR", 100))
-        hEAR = self._ear(homeAthlete.rpSkill) + (homeAdvantageEAR if homeAdvantage else 0)
+        hEAR = self._ear(homeAthlete.rpSkill) + (self.homeAdvantageEAR() if homeAdvantage else 0)
         aEAR = self._ear(awayAthlete.rpSkill)
         return hEAR, aEAR
 
