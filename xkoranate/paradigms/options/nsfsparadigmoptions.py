@@ -1,9 +1,11 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QFormLayout, QLabel,
-                               QRadioButton)
+from PySide6.QtWidgets import (QButtonGroup, QCheckBox, QDoubleSpinBox,
+                               QFormLayout, QLabel, QRadioButton)
 
 from xkoranate.abstractoptionswidget import XkorAbstractOptionsWidget
-from xkoranate.variant import toString
+from xkoranate.variant import toDouble, toString
+
+_DEFAULT_HOME_ADVANTAGE_MAGNITUDE = 4.0 / 3.0
 
 
 class XkorNSFSParadigmOptions(XkorAbstractOptionsWidget):
@@ -15,6 +17,18 @@ class XkorNSFSParadigmOptions(XkorAbstractOptionsWidget):
             self.homeAdvantage.setCheckState(Qt.Checked)
         self.setHomeAdvantage(self.homeAdvantage.checkState())
         self.homeAdvantage.stateChanged.connect(self.setHomeAdvantage)
+
+        self.homeAdvantageMagnitudeLabel = QLabel("Home advantage magnitude:")
+        self.homeAdvantageMagnitude = QDoubleSpinBox()
+        self.homeAdvantageMagnitude.setDecimals(3)
+        self.homeAdvantageMagnitude.setRange(0, 5)
+        self.homeAdvantageMagnitude.setSingleStep(0.05)
+        self.homeAdvantageMagnitude.setValue(toDouble(self.options.get(
+            "homeAdvantageMagnitude", _DEFAULT_HOME_ADVANTAGE_MAGNITUDE)))
+        self.setHomeAdvantageMagnitude(self.homeAdvantageMagnitude.value())
+        self.homeAdvantageMagnitude.valueChanged.connect(self.setHomeAdvantageMagnitude)
+        self._updateHomeAdvantageMagnitudeEnabled(self.homeAdvantage.checkState())
+        self.homeAdvantage.stateChanged.connect(self._updateHomeAdvantageMagnitudeEnabled)
 
         self.showTLAs = QCheckBox("Show team names")
         if toString(self.options.get("showTLAs", "true")) == "true":
@@ -49,6 +63,7 @@ class XkorNSFSParadigmOptions(XkorAbstractOptionsWidget):
 
         form = QFormLayout(self)
         form.addRow("", self.homeAdvantage)
+        form.addRow(self.homeAdvantageMagnitudeLabel, self.homeAdvantageMagnitude)
         form.addRow("", self.showTLAs)
         form.addRow(label, styleModsForm)
 
@@ -58,6 +73,15 @@ class XkorNSFSParadigmOptions(XkorAbstractOptionsWidget):
         else:
             self.options["homeAdvantage"] = "false"
         self.optionsChanged.emit(self.options)
+
+    def setHomeAdvantageMagnitude(self, x):
+        self.options["homeAdvantageMagnitude"] = x
+        self.optionsChanged.emit(self.options)
+
+    def _updateHomeAdvantageMagnitudeEnabled(self, x):
+        enabled = Qt.CheckState(x) == Qt.Checked
+        self.homeAdvantageMagnitudeLabel.setEnabled(enabled)
+        self.homeAdvantageMagnitude.setEnabled(enabled)
 
     def setShowTLAs(self, x):
         if Qt.CheckState(x) == Qt.Checked:
