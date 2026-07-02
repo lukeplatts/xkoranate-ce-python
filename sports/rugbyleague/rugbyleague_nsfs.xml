@@ -7,7 +7,7 @@
 	
 	<paradigm>nsfs</paradigm>
 	<paradigmOptions>
-		<double type="homeAdvantage">7.5</double>
+		<double type="homeAdvantage">1.333333333333</double>
 		<list type="attackCoeffs">
 			<double>1</double>
 			<double>0.833333333333</double>
