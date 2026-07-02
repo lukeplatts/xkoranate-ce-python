@@ -51,6 +51,12 @@ def message_box(parent, text, buttons, informativeText="", icon=QMessageBox.NoIc
     for role in (QMessageBox.Cancel, QMessageBox.Close):
         neutralBtn = box.button(role)
         if neutralBtn is not None and neutralBtn is not dangerBtn:
-            neutralBtn.setStyleSheet("QPushButton { color: %s; }" % theme.muted())
+            # qdarktheme fills whichever button is QMessageBox.setDefaultButton()
+            # with the accent colour (its QPushButton:default rule) — override
+            # background/border too, not just text colour, so a
+            # defaultButton=Cancel/Close never reads as the accent action
+            neutralBtn.setStyleSheet(
+                "QPushButton { background: transparent; border: 1px solid %s; color: %s; }"
+                % (theme.muted(), theme.muted()))
 
     return box

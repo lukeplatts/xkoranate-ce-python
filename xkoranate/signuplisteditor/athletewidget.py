@@ -49,10 +49,10 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
         self.setupLayout(actions)
 
     def insertionText(self):
-        return "Add athlete"
+        return "Add participant"
 
     def deletionText(self):
-        return "Remove athletes"
+        return "Remove participants"
 
     def athletes(self):
         rval = []
@@ -77,7 +77,7 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
                 self.dialog.deleteLater()
 
             self.dialog = QFileDialog(self)
-            self.dialog.setWindowTitle("Open semicolon-delimited athlete file")
+            self.dialog.setWindowTitle("Open semicolon-delimited participant file")
             self.dialog.setNameFilter("Text files (*.txt)")
             self.dialog.setWindowModality(Qt.WindowModal)
             self.dialog.setAcceptMode(QFileDialog.AcceptOpen)
