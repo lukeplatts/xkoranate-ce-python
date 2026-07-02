@@ -109,12 +109,23 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Qt runtime dependencies
+        # PyInstaller only bundles a library into the Linux build if it can
+        # resolve it (via ldd) on THIS machine at build time — anything
+        # missing here is silently left out of dist/, then breaks for every
+        # end user regardless of what they have installed. This list is the
+        # full transitive closure needed by the bundled Qt plugins (xcb,
+        # offscreen, image formats, etc.) so the shipped binary is
+        # self-contained. libegl1/libgl1 are the one exception: Qt loads
+        # them via dlopen (not a linked dependency), so PyInstaller can't
+        # detect or bundle them — they're left to resolve from the host's
+        # graphics driver, which every real Linux desktop already provides.
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             libegl1 \
             libgl1 \
             libxkbcommon0 \
+            libxkbcommon-x11-0 \
             libdbus-1-3 \
             libnss3 \
             libxcomposite1 \
@@ -123,7 +134,18 @@ jobs:
             libxtst6 \
             libxcb-cursor0 \
             libglib2.0-0 \
-            libfontconfig1
+            libfontconfig1 \
+            libsm6 \
+            libice6 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-render-util0 \
+            libxcb-shape0 \
+            libxcb-xkb1 \
+            libwebp7 \
+            libwebpdemux2 \
+            libwebpmux3
 
       - name: Create venv and install build dependencies
         run: |
@@ -137,3 +159,35 @@ jobs:
         run: |
           test -d dist/xkoranate
           test -x "dist/xkoranate/xkoranate"
+
+      - name: Verify binary launches self-contained (no runtime deps beyond the GPU driver)
+        # `test -x` above only proves the file exists — it doesn't catch a
+        # binary that starts and immediately dies. Running it on this runner
+        # wouldn't prove much either, since it already has every library
+        # apt-get installed above; a bundling regression would be masked by
+        # the system-wide copy. Instead, launch it inside a bare
+        # `ubuntu:24.04` container with only an X server and the graphics
+        # driver libs (libegl1/libgl1 — the two libraries Qt loads via
+        # dlopen, so PyInstaller can never bundle them; every real Linux
+        # desktop already has these). If anything else is missing from the
+        # bundle, this fails exactly like it would on a user's machine.
+        run: |
+          docker run --rm -v "$PWD/dist/xkoranate:/app:ro" ubuntu:24.04 bash -c '
+            set -e
+            apt-get update -qq
+            apt-get install -y -qq xvfb libegl1 libgl1 >/dev/null
+            cp -r /app /tmp/xkoranate && cd /tmp/xkoranate
+            Xvfb :99 -screen 0 1024x768x24 &
+            sleep 1
+            DISPLAY=:99 ./xkoranate &
+            pid=$!
+            sleep 5
+            if ! kill -0 "$pid" 2>/dev/null; then
+              echo "::error::xkoranate binary exited before the launch check completed"
+              wait "$pid" || true
+              exit 1
+            fi
+            kill "$pid"
+            wait "$pid" 2>/dev/null || true
+            echo "xkoranate launched and stayed running with no system deps beyond libegl1/libgl1"
+          '

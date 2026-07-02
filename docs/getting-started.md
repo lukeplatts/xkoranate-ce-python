@@ -18,6 +18,18 @@ Each release ships a build for macOS, Windows, and Linux.
     You'll need to explicitly allow the app to run — right-click → Open on
     macOS, or "More info" → "Run anyway" on Windows.
 
+!!! note "Linux: nothing to install"
+    The Linux build ships with everything it needs already inside the
+    `xkoranate/` folder — no system packages required on any regular Linux
+    desktop. The one thing it can't bundle is your graphics driver
+    (`libEGL`/`libGL`), but every desktop Linux install already has this,
+    since it's needed to draw anything on screen at all.
+
+    If double-clicking `xkoranate/xkoranate` still does nothing, run it from
+    a terminal instead — it's likely a genuinely unusual setup (a minimal or
+    headless install without a graphics driver), and the terminal will print
+    the specific missing library so it can be installed.
+
 ## The main window
 
 When you launch xkoranate you land on the main window: a sidebar on the left
