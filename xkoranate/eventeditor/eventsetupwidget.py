@@ -41,6 +41,7 @@ def _cloneSignupList(sl):
 
 class XkorEventSetupWidget(XkorAbstractTreeWidget):
     slChanged = Signal()
+    viewScheduleRequested = Signal()
 
     def __init__(self):
         super().__init__()
@@ -73,8 +74,12 @@ class XkorEventSetupWidget(XkorAbstractTreeWidget):
         self.randomizeAction.setEnabled(False)
         self.randomizeAction.triggered.connect(self.randomizeGroup)
 
+        self.scheduleAction = icon_action("schedule", "View full schedule", self)
+        self.scheduleAction.triggered.connect(lambda: self.viewScheduleRequested.emit())
+
         actions = [self.insertGroupAction, self.insertAthleteAction,
-                   self.insertAllAction, self.deleteAction, self.randomizeAction]
+                   self.insertAllAction, self.deleteAction, self.randomizeAction,
+                   None, self.scheduleAction]
         self.setupLayout(actions)
 
         self.slChanged.connect(self.updateAvailableAthletes)

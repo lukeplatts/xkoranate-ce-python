@@ -51,6 +51,22 @@ class XkorAbstractCompetition:
     def newOptionsWidget(self, options):
         return None
 
+    def schedule(self):
+        """Full fixture list across every matchday, before any results are
+        generated. Returns None for competition types that don't have a
+        fixed matchday-vs-matchday schedule (e.g. individually-scored
+        events)."""
+        return None
+
+    def _formatAthleteName(self, athlete):
+        showTLAs = toString(self.paradigmOpt.get("showTLAs", "true")) == "true"
+        if showTLAs and athlete.nation:
+            return "%s (%s)" % (athlete.name, athlete.nation)
+        return athlete.name
+
+    def _formatFixture(self, home, away):
+        return "%s v %s" % (self._formatAthleteName(home), self._formatAthleteName(away))
+
     def rankedListOutput(self, title, results, comparator):
         rankDigits = (int(math.log10(len(results))) + 1) if len(results) > 0 else 1
         rval = " " * (rankDigits + 1) + title + "\n"
