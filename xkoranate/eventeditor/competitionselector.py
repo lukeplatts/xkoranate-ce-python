@@ -11,6 +11,7 @@ class XkorCompetitionSelector(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.optionsWidget = None
         self.currentOptions = {}
 

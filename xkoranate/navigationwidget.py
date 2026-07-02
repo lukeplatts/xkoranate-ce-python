@@ -2,12 +2,12 @@ import time
 import uuid
 
 from PySide6.QtCore import QItemSelectionModel, Qt, Signal
-from PySide6.QtGui import QAction, QFont
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QAbstractItemView, QFrame, QTreeWidgetItem
 
 from .abstracttreewidget import XkorAbstractTreeWidget
 from .event import XkorEvent
-from .icons import icon
+from .icons import icon_action
 from .rng import Mt19937
 from .rplist import XkorRPList
 
@@ -53,7 +53,7 @@ class XkorNavigationWidget(XkorAbstractTreeWidget):
         self.treeWidget.setDragDropMode(QAbstractItemView.InternalMove)
         self.treeWidget.setSelectionMode(QAbstractItemView.SingleSelection)
 
-        self.m_insertSheetAction = QAction(icon("add"), "New event", self)
+        self.m_insertSheetAction = icon_action("add", "New event", self)
         self.m_insertSheetAction.setEnabled(True)
         self.m_insertSheetAction.triggered.connect(self.insertItem)
 
@@ -93,6 +93,7 @@ class XkorNavigationWidget(XkorAbstractTreeWidget):
 
         self.m_rpList = XkorRPList()
         self.editRPList.emit(self.m_rpList)
+        self.updateEmptyState()  # the two categories don't go through listChanged
 
     def createItem(self, parent):
         item = QTreeWidgetItem(parent)

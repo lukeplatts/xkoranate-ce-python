@@ -1,9 +1,10 @@
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (QAbstractItemView, QGridLayout, QStyle,
-                               QToolBar, QTreeWidgetItem, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QGridLayout, QLabel, QStackedLayout,
+                               QStyle, QToolBar, QTreeWidgetItem, QWidget)
 
-from .icons import icon
+from . import theme
+from .icons import icon_action
 from .treewidget import XkorTreeWidget
 
 
@@ -12,6 +13,10 @@ class XkorAbstractTreeWidget(QWidget):
 
     def __init__(self):
         super().__init__()
+        # a plain QWidget doesn't paint its stylesheet background on its own;
+        # without this, gaps in the layout (e.g. an AlignCenter toolbar row)
+        # show the native window background through instead of the theme
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.isInUse = True
         self.treeWidget = XkorTreeWidget()
         self.treeWidget.setRootIsDecorated(False)
@@ -25,11 +30,11 @@ class XkorAbstractTreeWidget(QWidget):
         # if we change the list, we need to tell the table generator
         self.treeWidget.itemChanged.connect(self.listIsEdited)
 
-        self.insertAction = QAction(icon("add"), self.insertionText(), self)
+        self.insertAction = icon_action("add", self.insertionText(), self)
         self.insertAction.setEnabled(True)
         self.insertAction.triggered.connect(self.insertItem)
 
-        self.deleteAction = QAction(icon("remove"), self.deletionText(), self)
+        self.deleteAction = icon_action("remove", self.deletionText(), self)
         self.deleteAction.setEnabled(False)
         self.deleteAction.triggered.connect(self.deleteItems)
 
@@ -42,6 +47,7 @@ class XkorAbstractTreeWidget(QWidget):
         self.moveDownAction.triggered.connect(self.moveDown)
 
         self.listChanged.connect(self.updateButtons)
+        self.listChanged.connect(self.updateEmptyState)
         self.isInUse = False
 
     def initItem(self, item):
@@ -49,6 +55,9 @@ class XkorAbstractTreeWidget(QWidget):
 
     def insertionText(self):
         return "Add item"
+
+    def emptyStateText(self):
+        return "Nothing here yet.\nClick + to %s." % self.insertionText().lower()
 
     def deletionText(self):
         return "Remove items"
@@ -150,13 +159,44 @@ class XkorAbstractTreeWidget(QWidget):
             else:
                 toolBar.addAction(i)
 
+        # empty-state hint, layered over the tree so a first-time user isn't
+        # left staring at a blank rectangle
+        self._emptyLabel = QLabel(self.emptyStateText())
+        self._emptyLabel.setAlignment(Qt.AlignCenter)
+        self._emptyLabel.setWordWrap(True)
+        self._emptyLabel.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._restyleEmptyLabel()
+        theme.signal.changed.connect(self._restyleEmptyLabel)
+
+        treeArea = QWidget()
+        treeStack = QStackedLayout(treeArea)
+        treeStack.setStackingMode(QStackedLayout.StackAll)
+        treeStack.addWidget(self.treeWidget)
+        treeStack.addWidget(self._emptyLabel)
+
         self.layout = QGridLayout(self)
-        self.layout.addWidget(self.treeWidget, 0, 0)
+        self.layout.addWidget(treeArea, 0, 0)
         if isVertical:
             self.layout.addWidget(toolBar, 0, 1, Qt.AlignCenter)
         else:
             self.layout.addWidget(toolBar, 1, 0, Qt.AlignCenter)
         self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.updateEmptyState()
+
+    def updateEmptyState(self):
+        if hasattr(self, "_emptyLabel"):
+            isEmpty = self.treeWidget.topLevelItemCount() == 0
+            self._emptyLabel.setVisible(isEmpty)
+            if isEmpty:
+                # QStackedLayout.StackAll doesn't guarantee paint order between
+                # siblings; some styles raise the tree view above it on theme
+                # (re)polish, silently hiding the hint underneath
+                self._emptyLabel.raise_()
+
+    def _restyleEmptyLabel(self):
+        self._emptyLabel.setStyleSheet("color: %s; padding: 24px;" % theme.muted())
+        self._emptyLabel.raise_()
 
     def updateButtons(self):
         selection = self.treeWidget.selectedItems()
