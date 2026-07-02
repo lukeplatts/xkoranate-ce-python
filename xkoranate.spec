@@ -6,6 +6,9 @@ import sys
 
 from PyInstaller.utils.hooks import collect_all
 
+sys.path.insert(0, SPECPATH)
+from xkoranate import __version__ as _version
+
 # qdarktheme (stylesheet templates + svg icons) and qtawesome (icon fonts +
 # charmaps) load data files at runtime — collect them or the frozen app crashes
 # at startup even though the dev run works.
@@ -86,7 +89,7 @@ if sys.platform == "darwin":
         info_plist={
             "CFBundleName": "xkoranate",
             "CFBundleDisplayName": "xkoranate",
-            "CFBundleShortVersionString": "0.4.0",
+            "CFBundleShortVersionString": _version,
             "NSHighResolutionCapable": True,
             # the app now ships its own light/dark toggle, so let macOS switch
             # window chrome (title bar) freely instead of forcing Aqua

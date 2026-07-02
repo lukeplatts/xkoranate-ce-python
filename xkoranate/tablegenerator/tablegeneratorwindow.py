@@ -2,6 +2,7 @@ from PySide6.QtCore import QFileInfo, Qt, Signal
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import QMainWindow, QToolBar
 
+from .. import __version__
 from ..icons import icon_action
 from .tablegenerator import XkorTableGenerator
 
@@ -12,7 +13,7 @@ class XkorTableGeneratorWindow(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("untitled – xkoranate table generator")
+        self.setWindowTitle(f"untitled – xkoranate table generator {__version__}")
 
         self.generator = XkorTableGenerator()
         self.setCentralWidget(self.generator)
@@ -70,7 +71,7 @@ class XkorTableGeneratorWindow(QMainWindow):
         displayName = "untitled"
         if filename != "":
             displayName = QFileInfo(filename).fileName()
-        self.setWindowTitle(displayName + "[*] – xkoranate table generator")
+        self.setWindowTitle(displayName + f"[*] – xkoranate table generator {__version__}")
         self.setModified(False)
 
     def setModified(self, newModified=True):

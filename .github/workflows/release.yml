@@ -29,18 +29,22 @@ jobs:
           python3 -m venv .venv
           .venv/bin/pip install -e . pyinstaller
 
+      - name: Determine version
+        id: version
+        run: echo "version=$(.venv/bin/python -c 'import xkoranate; print(xkoranate.__version__)')" >> "$GITHUB_OUTPUT"
+
       - name: Build xkoranate.app
         run: ./build_app.sh
 
       - name: Zip app bundle (preserving bundle structure/permissions)
         run: |
           cd dist
-          ditto -c -k --sequesterRsrc --keepParent xkoranate.app ../xkoranate-macos.zip
+          ditto -c -k --sequesterRsrc --keepParent xkoranate.app "../xkoranate-${{ steps.version.outputs.version }}-macos.zip"
 
       - uses: actions/upload-artifact@v4
         with:
           name: xkoranate-macos
-          path: xkoranate-macos.zip
+          path: xkoranate-${{ steps.version.outputs.version }}-macos.zip
 
   build-windows:
     name: Build Windows app
@@ -57,16 +61,22 @@ jobs:
           python -m venv .venv
           .venv\Scripts\pip install -e . pyinstaller
 
+      - name: Determine version
+        id: version
+        run: |
+          $ver = .venv\Scripts\python.exe -c "import xkoranate; print(xkoranate.__version__)"
+          echo "version=$ver" >> $env:GITHUB_OUTPUT
+
       - name: Build xkoranate.exe
         run: .\build_app.bat
 
       - name: Zip app folder
-        run: Compress-Archive -Path dist\xkoranate -DestinationPath xkoranate-windows.zip
+        run: Compress-Archive -Path dist\xkoranate -DestinationPath "xkoranate-${{ steps.version.outputs.version }}-windows.zip"
 
       - uses: actions/upload-artifact@v4
         with:
           name: xkoranate-windows
-          path: xkoranate-windows.zip
+          path: xkoranate-${{ steps.version.outputs.version }}-windows.zip
 
   build-linux:
     name: Build Linux app
@@ -100,16 +110,20 @@ jobs:
           python3 -m venv .venv
           .venv/bin/pip install -e . pyinstaller
 
+      - name: Determine version
+        id: version
+        run: echo "version=$(.venv/bin/python -c 'import xkoranate; print(xkoranate.__version__)')" >> "$GITHUB_OUTPUT"
+
       - name: Build xkoranate binary
         run: ./build_app.sh
 
       - name: Tar app folder (preserving exec bits)
-        run: tar -C dist -czf xkoranate-linux.tar.gz xkoranate
+        run: tar -C dist -czf "xkoranate-${{ steps.version.outputs.version }}-linux.tar.gz" xkoranate
 
       - uses: actions/upload-artifact@v4
         with:
           name: xkoranate-linux
-          path: xkoranate-linux.tar.gz
+          path: xkoranate-${{ steps.version.outputs.version }}-linux.tar.gz
 
   publish-release:
     name: Publish draft GitHub release
@@ -140,6 +154,6 @@ jobs:
           draft: true
           generate_release_notes: true
           files: |
-            artifacts/xkoranate-macos/xkoranate-macos.zip
-            artifacts/xkoranate-windows/xkoranate-windows.zip
-            artifacts/xkoranate-linux/xkoranate-linux.tar.gz
+            artifacts/xkoranate-macos/*.zip
+            artifacts/xkoranate-windows/*.zip
+            artifacts/xkoranate-linux/*.tar.gz
