@@ -17,7 +17,14 @@ class XkorMatchesCompetition(XkorAbstractCompetition):
 
         return XkorMatchesCompetitionOptions(competitionOptions)
 
-    def schedule(self):
+    def supportsOdds(self):
+        return self._oddsParadigm() is not None
+
+    def matchOdds(self, matchday, trials=1000):
+        p = self._oddsParadigm()
+        if p is None:
+            return None
+
         lines = []
         for i in self.startList.groups:
             size = len(i.athletes) - (len(i.athletes) % 2)
@@ -26,11 +33,15 @@ class XkorMatchesCompetition(XkorAbstractCompetition):
             if len(self.startList.groups) > 1:
                 lines.append(i.name)
             for home in range(0, size, 2):
-                lines.append(self._formatFixture(i.athletes[home], i.athletes[home + 1]))
-            lines.append("")
-        if not lines:
-            return ""
-        return "\n".join(lines).rstrip("\n") + "\n"
+                lines.append(self._formatOdds(p, i.athletes[home], i.athletes[home + 1], trials))
+        return "\n".join(lines) + ("\n" if lines else "")
+
+    def _oddsParadigm(self):
+        from xkoranate.paradigms.abstracth2hparadigm import XkorAbstractH2HParadigm
+        from xkoranate.paradigms.paradigmfactory import XkorParadigmFactory
+
+        p = XkorParadigmFactory.newParadigmForSport(self.sport, dict(self.paradigmOpt))
+        return p if isinstance(p, XkorAbstractH2HParadigm) else None
 
     def scorinate(self, matchday):
         from xkoranate.paradigms.paradigmfactory import XkorParadigmFactory
