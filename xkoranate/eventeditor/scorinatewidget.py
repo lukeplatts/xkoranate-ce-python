@@ -1,9 +1,9 @@
 import time
 
 from PySide6.QtCore import QDir, QSize, Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QMessageBox,
-                               QPlainTextEdit, QStyle, QToolBar, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
+                               QFileDialog, QMessageBox, QPlainTextEdit, QStyle,
+                               QToolBar, QVBoxLayout, QWidget)
 
 from ..event import XkorEvent
 from ..icons import icon_action
@@ -289,8 +289,30 @@ class XkorScorinateWidget(QWidget):
         schedule = self.c.schedule() if self.c is not None else None
         if schedule is None:
             return
-        self.textedit.setPlainText(self._formatResults(schedule))
-        self.exportResultsAction.setEnabled(True)
+        self._showTextPreview("Full schedule", schedule)
+
+    def _showTextPreview(self, title, text):
+        # shown in its own dialog, never in self.textedit — that widget is
+        # the results view, and overwriting it left users with no way back
+        # to their actual scores short of reopening the event
+        dialog = QDialog(self)
+        dialog.setWindowTitle(title)
+        dialog.setWindowModality(Qt.WindowModal)
+        dialog.resize(560, 420)
+
+        preview = QPlainTextEdit(self._formatResults(text))
+        preview.setReadOnly(True)
+        preview.setFont(monospace_font())
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        buttons.rejected.connect(dialog.reject)
+        buttons.accepted.connect(dialog.accept)
+
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(preview, 1)
+        layout.addWidget(buttons)
+
+        dialog.exec()
 
     def _formatResults(self, text):
         if self.bbcodeCheckBox.isChecked() and text != "":
