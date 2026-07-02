@@ -12,15 +12,23 @@ class XkorHowzzatParadigm(XkorAbstractH2HParadigm):
 
     def newOptionsWidget(self, paradigmOptions):
         from .options.howzzatparadigmoptions import XkorHowzzatParadigmOptions
-        return XkorHowzzatParadigmOptions(paradigmOptions)
+        return XkorHowzzatParadigmOptions(paradigmOptions, self._defaultHomeAdvantageMagnitude())
 
     # protected:
+
+    def _defaultHomeAdvantageMagnitude(self):
+        return toDouble(self.opt.get("homeAdvantage", 0.065))
+
+    def homeAdvantageMagnitude(self):
+        # the sport file provides a default magnitude; the options widget
+        # lets the user override it per-event
+        return toDouble(self.userOpt.get("homeAdvantageMagnitude", self._defaultHomeAdvantageMagnitude()))
 
     def generateFTScore(self, home, away):
         # get the parameters
         homeAdvantage = 0
         if toString(self.userOpt.get("homeAdvantage")) == "true":
-            homeAdvantage = toDouble(self.opt.get("homeAdvantage", 0.065))
+            homeAdvantage = self.homeAdvantageMagnitude()
         useStyleMods = toString(self.userOpt.get("useStyleMods", "true")) == "true"
         skillCoeff = toDouble(self.opt.get("skillCoeff", 0.6))
         skillOffset = toDouble(self.opt.get("skillOffset", 0.2))

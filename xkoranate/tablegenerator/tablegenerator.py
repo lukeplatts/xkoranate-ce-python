@@ -1,13 +1,12 @@
 import math
-import os
 
 from PySide6.QtCore import QDir, QFileInfo, QRegularExpression, Qt, Signal
-from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFormLayout,
                                QGridLayout, QLabel, QMessageBox,
-                               QPlainTextEdit, QSpinBox, QStyle, QWidget)
+                               QPlainTextEdit, QSpinBox, QWidget)
 
-from ..paths import iconsDir
+from ..ui.dialogs import message_box
+from ..ui.fonts import monospace_font
 from ..variant import toDouble, toString
 from .sortcriteriawidget import XkorSortCriteriaWidget
 from .table import XkorTable
@@ -37,6 +36,7 @@ class XkorTableGenerator(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
 
         self.t = XkorTable()
         self.matchesList = []
@@ -84,9 +84,7 @@ class XkorTableGenerator(QWidget):
         self.matches.textChanged.connect(self.setMatchesModified)
 
         self.table = QPlainTextEdit()
-        font = QFont()
-        font.setStyleHint(QFont.TypeWriter)
-        self.table.setFont(QFont(font.defaultFamily()))
+        self.table.setFont(monospace_font())
         self.table.setReadOnly(True)
 
         pointsLayout = QGridLayout()
@@ -343,17 +341,11 @@ class XkorTableGenerator(QWidget):
     def showUnsavedDialog(self):
         displayFileName = ("untitled" if not self.currentFileName
                            else QFileInfo(self.currentFileName).fileName())
-        warning = QMessageBox(
-            QMessageBox.NoIcon, "xkoranate",
-            "Do you want to save the changes you made to “%s”?" % displayFileName,
-            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel, self)
-        iconSize = self.style().pixelMetric(QStyle.PM_MessageBoxIconSize)
-        warning.setIconPixmap(
-            QPixmap(os.path.join(iconsDir(), "xkoranate.png")).scaled(
-                iconSize, iconSize, Qt.IgnoreAspectRatio,
-                Qt.SmoothTransformation))
-        warning.setInformativeText("Your changes will be lost if you don’t save them.")
-        warning.setWindowModality(Qt.WindowModal)
+        warning = message_box(
+            self, "Do you want to save the changes you made to “%s”?" % displayFileName,
+            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+            informativeText="Your changes will be lost if you don’t save them.",
+            destructiveButton=QMessageBox.Discard)
         return warning.exec()
 
     def updateTable(self):

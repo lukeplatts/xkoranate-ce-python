@@ -7,7 +7,7 @@
 	
 	<paradigm>nsfs</paradigm>
 	<paradigmOptions>
-		<double type="homeAdvantage">7.5</double>
+		<double type="homeAdvantage">1.333333333333</double>
 		<double type="homeAdvantageGG">0.133333333333</double>
 		<double type="etAttackCoeff">0.333333333333</double>
 		<double type="goldenGoalProb">0.4</double>

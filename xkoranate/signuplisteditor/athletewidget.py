@@ -2,14 +2,14 @@ import time
 import uuid
 
 from PySide6.QtCore import QDir, Qt
-from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (QFileDialog, QHeaderView, QTreeWidgetItem,
-                               QTreeWidgetItemIterator)
+from PySide6.QtWidgets import QFileDialog, QHeaderView, QTreeWidgetItemIterator
 
 from ..athlete import XkorAthlete
-from ..icons import icon
+from ..icons import icon_action
+from ..ui.fonts import column_width_for
 from ..variant import qNumber, toDouble, toString
-from .abstractathletewidget import (XkorAbstractAthleteWidget, _indexOf,
+from .abstractathletewidget import (_AthleteTreeWidgetItem,
+                                    XkorAbstractAthleteWidget, _indexOf,
                                     _uuidFromString, _uuidToString)
 from .athletedelegate import XkorAthleteDelegate
 
@@ -37,11 +37,11 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
         for i in range(len(self.m_columnTypes)):
             if self.m_columnTypes[i] in ("double", "golfStyle", "skill"):
                 self.treeWidget.header().setSectionResizeMode(i, QHeaderView.Fixed)
-                self.treeWidget.header().resizeSection(i, 80)
+                self.treeWidget.header().resizeSection(i, column_width_for(self.treeWidget, "8888.88"))
             else:
                 self.treeWidget.header().setSectionResizeMode(i, QHeaderView.Stretch)
 
-        self.importAction = QAction(icon("document-import"), "Import from text file", self)
+        self.importAction = icon_action("document-import", "Import from text file", self)
         self.importAction.setEnabled(True)
         self.importAction.triggered.connect(lambda: self.importAthletes())
 
@@ -49,10 +49,10 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
         self.setupLayout(actions)
 
     def insertionText(self):
-        return "Add athlete"
+        return "Add participant"
 
     def deletionText(self):
-        return "Remove athletes"
+        return "Remove participants"
 
     def athletes(self):
         rval = []
@@ -77,7 +77,7 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
                 self.dialog.deleteLater()
 
             self.dialog = QFileDialog(self)
-            self.dialog.setWindowTitle("Open semicolon-delimited athlete file")
+            self.dialog.setWindowTitle("Open semicolon-delimited participant file")
             self.dialog.setNameFilter("Text files (*.txt)")
             self.dialog.setWindowModality(Qt.WindowModal)
             self.dialog.setAcceptMode(QFileDialog.AcceptOpen)
@@ -98,14 +98,21 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
             with f:
                 for line in f.read().splitlines():
                     l = line.split(";")
-                    if len(l) == 3:
+                    if len(l) >= 3:
                         athleteName = l[0].strip()
                         athleteNation = l[1].strip()
                         athleteSkill = l[2].strip()
 
+                        # any columns beyond name/nation/skill (e.g. style
+                        # mods) are matched positionally to the paradigm's
+                        # extra column keys
+                        properties = {}
+                        for i in range(3, min(len(l), len(self.m_columnKeys))):
+                            properties[self.m_columnKeys[i]] = l[i].strip()
+
                         self.initItem(self.createItem(), athleteName,
                                       uuid.UUID(int=self.r._r.getrandbits(128)),
-                                      athleteNation, toDouble(athleteSkill))
+                                      athleteNation, toDouble(athleteSkill), properties)
 
             path = QDir(filename)
             path.cdUp()
@@ -138,7 +145,7 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
     def setAthletes(self, athletes):
         self.treeWidget.clear()
         for i in athletes:
-            item = QTreeWidgetItem(self.treeWidget)
+            item = _AthleteTreeWidgetItem(self.treeWidget, self.m_columnTypes)
             item.setFlags(item.flags() | Qt.ItemIsEditable)
             self.initItem(item, i.name, i.id, i.nation, i.skill, i.properties)
         self.listChanged.emit()

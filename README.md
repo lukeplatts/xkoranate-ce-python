@@ -57,5 +57,7 @@ Windows-support feasibility plan.
 
 ## License
 
-Same terms as the original project (see `GPL`/`LGPL`/`LICENSE` in the upstream
-repository).
+GNU General Public License v3.0 or later — see [LICENSE](LICENSE). This
+project is a derivative of the original xkoranate-CE by Commerce Heights
+(ThirdGeek); see [NOTICE.md](NOTICE.md) for full attribution and third-party
+components.

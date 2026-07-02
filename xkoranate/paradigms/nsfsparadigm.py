@@ -13,7 +13,15 @@ class XkorNSFSParadigm(XkorAbstractH2HParadigm):
 
     def newOptionsWidget(self, paradigmOptions):
         from .options.nsfsparadigmoptions import XkorNSFSParadigmOptions
-        return XkorNSFSParadigmOptions(paradigmOptions)
+        return XkorNSFSParadigmOptions(paradigmOptions, self._defaultHomeAdvantageMagnitude())
+
+    def _defaultHomeAdvantageMagnitude(self):
+        return toDouble(self.opt.get("homeAdvantage", 4.0 / 3.0))
+
+    def homeAdvantageMagnitude(self):
+        # the sport file provides a default magnitude; the options widget
+        # lets the user override it per-event
+        return toDouble(self.userOpt.get("homeAdvantageMagnitude", self._defaultHomeAdvantageMagnitude()))
 
     # protected:
 
@@ -29,6 +37,7 @@ class XkorNSFSParadigm(XkorAbstractH2HParadigm):
         baseAttacksInferior = toInt(self.opt.get("baseAttacksInferior"))
         attackCoeffSuperior = toDouble(self.opt.get("attackCoeffSuperior"))
         attackCoeffInferior = toDouble(self.opt.get("attackCoeffInferior"))
+        homeAdvValue = (self.homeAdvantageMagnitude() if homeAdvantage else 1)
 
         if skill > oppSkill:
             attacks = int((baseAttacksSuperior + ((skill - oppSkill) * attackCoeffSuperior))
@@ -41,7 +50,7 @@ class XkorNSFSParadigm(XkorAbstractH2HParadigm):
         pGoal = 1 - ((bast + rankDiffModifier
                       * (math.pow(oppSkill * rankCoeff, rankScalar)
                          - math.pow(skill * rankCoeff, rankScalar)))
-                     / (baseAttackCoeff + (1 if homeAdvantage else 0)))
+                     / (baseAttackCoeff * homeAdvValue))
 
         # score
         rand = self.s.randUniform()
