@@ -14,6 +14,14 @@ _SCORE_LINE_RE = re.compile(
 
 
 def boldWinnerLine(line):
+    # Table rows (standings, results grid) are padded/justified into fixed-
+    # width columns and so always contain runs of 2+ spaces; genuine match
+    # lines from outputLine() are built from single-space-joined fields.
+    # This keeps table rows — which can coincidentally contain "3–1"-style
+    # cells in the results grid — from being mistaken for match lines.
+    if "  " in line:
+        return line
+
     m = _DEF_BY_RE.match(line)
     if m:
         return line[:m.start("winner")] + "[b]%s[/b]" % m.group("winner") + line[m.end("winner"):]
