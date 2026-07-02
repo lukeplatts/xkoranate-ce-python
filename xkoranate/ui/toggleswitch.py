@@ -22,6 +22,9 @@ class XkorToggleSwitch(QAbstractButton):
         self.setCheckable(True)
         self.setCursor(Qt.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        # a from-scratch paintEvent draws nothing for free, including the
+        # native focus rect — without this, tabbing here is invisible
+        self.setFocusPolicy(Qt.StrongFocus)
         self._knobPos = 0.0  # 0 = off (light), 1 = on (dark)
 
         self._anim = QPropertyAnimation(self, b"knobPos", self)
@@ -77,3 +80,10 @@ class XkorToggleSwitch(QAbstractButton):
         knob_rect = QRectF(knob_x, track.top() + 2, knob_d, knob_d)
         painter.setBrush(QColor("#ffffff"))
         painter.drawEllipse(knob_rect)
+
+        if self.hasFocus():
+            focus_ring = track.adjusted(-2, -2, 2, 2)
+            ring_color = QColor(theme.ACCENT)
+            painter.setPen(ring_color)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRoundedRect(focus_ring, radius + 2, radius + 2)
