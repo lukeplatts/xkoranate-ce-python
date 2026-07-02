@@ -32,8 +32,12 @@ a = Analysis(
         "PySide6.QtPositioning", "PySide6.QtLocation", "PySide6.QtBluetooth",
         "PySide6.QtSensors", "PySide6.QtSerialPort", "PySide6.QtSql",
         "PySide6.QtTest", "PySide6.QtDesigner", "PySide6.QtHelp",
-        "PySide6.QtOpenGL", "PySide6.QtOpenGLWidgets", "PySide6.QtSvg",
-        "PySide6.QtSvgWidgets", "PySide6.QtUiTools", "PySide6.QtXml",
+        # NOTE: QtSvg/QtSvgWidgets are *not* excluded — qdarktheme's icon
+        # engine imports PySide6.QtSvg internally at runtime (qt-material,
+        # the previous theme dependency, didn't need it), so excluding them
+        # crashes the frozen app on launch even though the dev run is fine.
+        "PySide6.QtOpenGL", "PySide6.QtOpenGLWidgets",
+        "PySide6.QtUiTools", "PySide6.QtXml",
         "PySide6.QtNetwork", "PySide6.QtDBus", "PySide6.QtConcurrent",
         "PySide6.QtPrintSupport", "PySide6.QtWebSockets", "PySide6.QtRemoteObjects",
         "PySide6.QtScxml", "PySide6.QtStateMachine", "PySide6.QtTextToSpeech",
