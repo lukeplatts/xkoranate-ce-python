@@ -3,6 +3,7 @@ from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QSizePolicy,
                                QToolBar, QWidget)
 
+from . import __version__
 from .centralwidget import XkorCentralWidget
 from .icons import icon, icon_action
 from .mainwindow import XkorMainWindow
@@ -119,7 +120,7 @@ class XkorApplication(QApplication):
 
         self.mainWindow.setCentralWidget(self.cw)
         self.mainWindow.addToolBar(self.toolBar)
-        self.mainWindow.setWindowTitle("untitled[*] – xkoranate")
+        self.mainWindow.setWindowTitle(f"untitled[*] – xkoranate {__version__}")
 
         # C++ only did this on X11; on macOS the .app bundle provides the dock
         # icon, so setting it unconditionally is harmless
@@ -163,7 +164,7 @@ class XkorApplication(QApplication):
         displayName = "untitled"
         if filename != "":
             displayName = QFileInfo(filename).fileName()
-        self.mainWindow.setWindowTitle(displayName + "[*] – xkoranate")
+        self.mainWindow.setWindowTitle(displayName + f"[*] – xkoranate {__version__}")
         self.setModified(False)
 
     def setModified(self, newModified=True):
