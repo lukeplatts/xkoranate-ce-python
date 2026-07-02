@@ -1,5 +1,5 @@
 from PySide6.QtCore import QDir, QFileInfo, QSettings, Qt
-from PySide6.QtGui import QKeySequence
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QSizePolicy,
                                QToolBar, QWidget)
 
@@ -59,6 +59,33 @@ class XkorApplication(QApplication):
         self.tableAction.setShortcut(QKeySequence(Qt.CTRL | Qt.Key_T))
         self.tableAction.triggered.connect(self.tableGenerator)
 
+        self.quitAction = QAction("Quit", self)
+        self.quitAction.setShortcut(QKeySequence(QKeySequence.Quit))
+        self.quitAction.triggered.connect(self.closeAllWindows)
+
+        self.darkModeAction = QAction("Dark mode", self)
+        self.darkModeAction.setCheckable(True)
+        self.darkModeAction.setChecked(theme.is_dark())
+        self.darkModeAction.setShortcut(QKeySequence(Qt.CTRL | Qt.SHIFT | Qt.Key_D))
+        self.darkModeAction.toggled.connect(self.setThemeDark)
+
+        # menu bar — the standard cross-platform place shortcuts are
+        # discoverable; the toolbar's icons/tooltips don't show them
+        menuBar = self.mainWindow.menuBar()
+        fileMenu = menuBar.addMenu("&File")
+        fileMenu.addAction(self.newAction)
+        fileMenu.addAction(self.openAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.saveAction)
+        fileMenu.addAction(self.saveAsAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.tableAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.quitAction)
+
+        viewMenu = menuBar.addMenu("&View")
+        viewMenu.addAction(self.darkModeAction)
+
         # toolbar
         self.toolBar = QToolBar()
         self.toolBar.setMovable(False)
@@ -84,6 +111,9 @@ class XkorApplication(QApplication):
         self.themeSwitch.setChecked(theme.is_dark())
         self.themeSwitch.setToolTip("Switch between light and dark mode")
         self.themeSwitch.toggled.connect(self.setThemeDark)
+        # keep the toolbar switch and the View menu's checkbox in lockstep
+        self.themeSwitch.toggled.connect(self.darkModeAction.setChecked)
+        self.darkModeAction.toggled.connect(self.themeSwitch.setChecked)
         themeRow.addWidget(self.themeSwitch)
         self.toolBar.addWidget(themeBox)
 
