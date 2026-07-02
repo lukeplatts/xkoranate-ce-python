@@ -112,7 +112,17 @@ jobs:
 
   build-linux:
     name: Build Linux app
-    runs-on: ubuntu-latest
+    # Pinned older than ubuntu-latest on purpose: PyInstaller bundles the
+    # build machine's own libpython.so, which is linked against that
+    # machine's glibc. glibc symbol versioning is backwards-compatible only
+    # (an older glibc can't satisfy symbols versioned for a newer one), so
+    # building on ubuntu-latest (24.04, glibc 2.39) shipped a binary that
+    # instantly failed with "version `GLIBC_2.38' not found" on anything
+    # older — including Linux Mint 21.x (glibc 2.35, released 2023 and still
+    # widely used). Building on 22.04 (glibc 2.35) instead trades away
+    # nothing on newer systems (still forward-compatible) while covering a
+    # much wider range of currently-deployed distros.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
@@ -173,17 +183,18 @@ jobs:
 
       - name: Verify binary launches self-contained (no runtime deps beyond the GPU driver)
         # Running this on the build runner itself would prove nothing — it
-        # already has every library apt-get installed above, so a bundling
-        # regression (a lib that stops resolving and silently drops out of
-        # dist/) would be masked by the system-wide copy. Instead, launch the
-        # binary inside a bare `ubuntu:24.04` container that only has an X
-        # server and the graphics driver libs (libegl1/libgl1 — the two
-        # libraries Qt loads via dlopen, so PyInstaller can never bundle
-        # them; every real Linux desktop already has these). If anything
-        # else is missing from the bundle, this fails exactly like it would
-        # on a user's machine.
+        # already has every library apt-get installed above (and matches its
+        # own glibc exactly, which is exactly how the GLIBC_2.38 regression
+        # above shipped unnoticed). Launch the binary inside a bare
+        # `ubuntu:22.04` container instead — our oldest supported target's
+        # glibc baseline (matches Linux Mint 21.x) — with only an X server
+        # and the graphics driver libs (libegl1/libgl1 — the two libraries
+        # Qt loads via dlopen, so PyInstaller can never bundle them; every
+        # real Linux desktop already has these). If anything else is
+        # missing, or if a future bump of the build runner raises the glibc
+        # floor again, this fails exactly like it would on a user's machine.
         run: |
-          docker run --rm -v "$PWD/dist/xkoranate:/app:ro" ubuntu:24.04 bash -c '
+          docker run --rm -v "$PWD/dist/xkoranate:/app:ro" ubuntu:22.04 bash -c '
             set -e
             apt-get update -qq
             apt-get install -y -qq xvfb libegl1 libgl1 >/dev/null

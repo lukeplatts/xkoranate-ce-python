@@ -18,17 +18,25 @@ Each release ships a build for macOS, Windows, and Linux.
     You'll need to explicitly allow the app to run — right-click → Open on
     macOS, or "More info" → "Run anyway" on Windows.
 
-!!! note "Linux: nothing to install"
+!!! note "Linux: nothing to install (on Linux Mint 21+ / Ubuntu 22.04+ or newer)"
     The Linux build ships with everything it needs already inside the
     `xkoranate/` folder — no system packages required on any regular Linux
     desktop. The one thing it can't bundle is your graphics driver
     (`libEGL`/`libGL`), but every desktop Linux install already has this,
     since it's needed to draw anything on screen at all.
 
-    If double-clicking `xkoranate/xkoranate` still does nothing, run it from
-    a terminal instead — it's likely a genuinely unusual setup (a minimal or
-    headless install without a graphics driver), and the terminal will print
-    the specific missing library so it can be installed.
+    The build requires **glibc 2.35 or newer** (Linux Mint 21+, Ubuntu
+    22.04+, Debian 12+, Fedora 36+, or comparably recent). This isn't
+    something the app can bundle its way around — glibc is the C library
+    everything else on the system links against, so it has to match what's
+    already installed.
+
+    If double-clicking `xkoranate/xkoranate` does nothing, run it from a
+    terminal instead — it'll print the specific problem. A `GLIBC_x.xx not
+    found` error means your distro is older than what's supported above; a
+    missing-library error means an unusually minimal or headless install
+    (missing even a graphics driver), and the terminal output will name the
+    exact library to install.
 
 ## The main window
 

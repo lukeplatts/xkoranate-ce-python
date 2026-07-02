@@ -67,6 +67,17 @@ than linking them, so PyInstaller can never detect or bundle them. They're
 left to resolve from the host's graphics driver, which every real Linux
 desktop already provides — end users don't need to install anything.
 
+The Linux build job is pinned to `runs-on: ubuntu-22.04` rather than
+`ubuntu-latest` — PyInstaller bundles the build machine's own `libpython.so`,
+which is linked against that machine's glibc, and glibc symbol versioning is
+backwards-compatible only. Building on 24.04 (glibc 2.39) shipped a binary
+that instantly failed with `GLIBC_2.38 not found` on anything older,
+including Linux Mint 21.x (glibc 2.35) — a very much currently-supported,
+widely-used release. 22.04 (glibc 2.35) costs nothing on newer systems while
+covering a much wider range of real-world machines. The launch-check step
+verifies against an `ubuntu:22.04` container specifically (not `latest`) so
+a future runner bump can't quietly reintroduce the same regression.
+
 Tagged releases (`v*`) trigger `.github/workflows/release.yml`, which builds
 all three platforms in CI and attaches the zipped artifacts to a draft GitHub
 release. See [ROADMAP.md](ROADMAP.md) for the Windows-support feasibility
