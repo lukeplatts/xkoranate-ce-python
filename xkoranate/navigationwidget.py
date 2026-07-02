@@ -2,12 +2,12 @@ import time
 import uuid
 
 from PySide6.QtCore import QItemSelectionModel, Qt, Signal
-from PySide6.QtGui import QAction, QFont, QPalette
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QAbstractItemView, QFrame, QTreeWidgetItem
 
 from .abstracttreewidget import XkorAbstractTreeWidget
 from .event import XkorEvent
-from .icons import icon
+from .icons import icon_action
 from .rng import Mt19937
 from .rplist import XkorRPList
 
@@ -42,15 +42,10 @@ class XkorNavigationWidget(XkorAbstractTreeWidget):
         self.m_events = {}  # QUuid -> XkorEvent
         self.m_rpList = None
 
-        palette = self.palette()
-        palette.setColor(QPalette.Base, palette.alternateBase().color())
-        self.setPalette(palette)
-        self.setBackgroundRole(QPalette.Base)
-        self.setAutoFillBackground(True)
-        self.treeWidget.setPalette(palette)
+        # let the application theme own the sidebar background; just keep the
+        # frameless look and drop the native focus rect
         self.treeWidget.setFrameStyle(QFrame.NoFrame)
         self.treeWidget.setAttribute(Qt.WA_MacShowFocusRect, False)
-        self.treeWidget.setAutoFillBackground(True)
 
         self.treeWidget.setColumnCount(1)
         self.treeWidget.setHeaderHidden(True)
@@ -58,7 +53,7 @@ class XkorNavigationWidget(XkorAbstractTreeWidget):
         self.treeWidget.setDragDropMode(QAbstractItemView.InternalMove)
         self.treeWidget.setSelectionMode(QAbstractItemView.SingleSelection)
 
-        self.m_insertSheetAction = QAction(icon("add"), "New event", self)
+        self.m_insertSheetAction = icon_action("add", "New event", self)
         self.m_insertSheetAction.setEnabled(True)
         self.m_insertSheetAction.triggered.connect(self.insertItem)
 
@@ -98,6 +93,7 @@ class XkorNavigationWidget(XkorAbstractTreeWidget):
 
         self.m_rpList = XkorRPList()
         self.editRPList.emit(self.m_rpList)
+        self.updateEmptyState()  # the two categories don't go through listChanged
 
     def createItem(self, parent):
         item = QTreeWidgetItem(parent)

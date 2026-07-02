@@ -1,17 +1,25 @@
 from PySide6.QtCore import QDir, QFileInfo, QSettings, Qt
 from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import QApplication, QToolBar
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QSizePolicy,
+                               QToolBar, QWidget)
 
 from .centralwidget import XkorCentralWidget
-from .icons import icon
+from .icons import icon, icon_action
 from .mainwindow import XkorMainWindow
 from .paths import sportsDir
+from . import theme
+from .ui.toggleswitch import XkorToggleSwitch
 from .variant import toStringList
 
 
 class XkorApplication(QApplication):
     def __init__(self, argv):
         super().__init__(argv)
+
+        # flat light/dark theme — must be applied before any widgets are
+        # constructed so themed palettes/metrics are in place from the start
+        theme.apply(self)
+
         self.tg = None
         self.modified = False
 
@@ -31,25 +39,52 @@ class XkorApplication(QApplication):
         self.cw.signupListDirectoryChanged.connect(self.setSignupListDirectory)
 
         # set up actions
-        self.newAction = QAction(icon("document-new"), "New file…", self)
+        self.newAction = icon_action("document-new", "New file…", self)
         self.newAction.setShortcut(QKeySequence(QKeySequence.New))
         self.newAction.triggered.connect(lambda: self.cw.newFile())
 
-        self.openAction = QAction(icon("document-open"), "Open file…", self)
+        self.openAction = icon_action("document-open", "Open file…", self)
         self.openAction.setShortcut(QKeySequence(QKeySequence.Open))
         self.openAction.triggered.connect(lambda: self.cw.openFile())
 
-        self.saveAction = QAction(icon("document-save"), "Save file…", self)
+        self.saveAction = icon_action("document-save", "Save file…", self)
         self.saveAction.setShortcut(QKeySequence(QKeySequence.Save))
         self.saveAction.triggered.connect(lambda: self.cw.saveFile())
 
-        self.saveAsAction = QAction(icon("document-save-as"), "Save file as…", self)
+        self.saveAsAction = icon_action("document-save-as", "Save file as…", self)
         self.saveAsAction.setShortcut(QKeySequence(Qt.CTRL | Qt.SHIFT | Qt.Key_S))
         self.saveAsAction.triggered.connect(lambda: self.cw.saveFileAs())
 
-        self.tableAction = QAction(icon("table-generator"), "Table generator", self)
+        self.tableAction = icon_action("table-generator", "Table generator", self)
         self.tableAction.setShortcut(QKeySequence(Qt.CTRL | Qt.Key_T))
         self.tableAction.triggered.connect(self.tableGenerator)
+
+        self.quitAction = QAction("Quit", self)
+        self.quitAction.setShortcut(QKeySequence(QKeySequence.Quit))
+        self.quitAction.triggered.connect(self.closeAllWindows)
+
+        self.darkModeAction = QAction("Dark mode", self)
+        self.darkModeAction.setCheckable(True)
+        self.darkModeAction.setChecked(theme.is_dark())
+        self.darkModeAction.setShortcut(QKeySequence(Qt.CTRL | Qt.SHIFT | Qt.Key_D))
+        self.darkModeAction.toggled.connect(self.setThemeDark)
+
+        # menu bar — the standard cross-platform place shortcuts are
+        # discoverable; the toolbar's icons/tooltips don't show them
+        menuBar = self.mainWindow.menuBar()
+        fileMenu = menuBar.addMenu("&File")
+        fileMenu.addAction(self.newAction)
+        fileMenu.addAction(self.openAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.saveAction)
+        fileMenu.addAction(self.saveAsAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.tableAction)
+        fileMenu.addSeparator()
+        fileMenu.addAction(self.quitAction)
+
+        viewMenu = menuBar.addMenu("&View")
+        viewMenu.addAction(self.darkModeAction)
 
         # toolbar
         self.toolBar = QToolBar()
@@ -61,6 +96,26 @@ class XkorApplication(QApplication):
         self.toolBar.addAction(self.saveAsAction)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.tableAction)
+
+        # push the theme switch to the far right of the toolbar
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.toolBar.addWidget(spacer)
+
+        themeBox = QWidget()
+        themeRow = QHBoxLayout(themeBox)
+        themeRow.setContentsMargins(0, 0, 8, 0)
+        themeRow.setSpacing(6)
+        themeRow.addWidget(QLabel("Dark mode"))
+        self.themeSwitch = XkorToggleSwitch()
+        self.themeSwitch.setChecked(theme.is_dark())
+        self.themeSwitch.setToolTip("Switch between light and dark mode")
+        self.themeSwitch.toggled.connect(self.setThemeDark)
+        # keep the toolbar switch and the View menu's checkbox in lockstep
+        self.themeSwitch.toggled.connect(self.darkModeAction.setChecked)
+        self.darkModeAction.toggled.connect(self.themeSwitch.setChecked)
+        themeRow.addWidget(self.themeSwitch)
+        self.toolBar.addWidget(themeBox)
 
         self.mainWindow.setCentralWidget(self.cw)
         self.mainWindow.addToolBar(self.toolBar)
@@ -114,6 +169,9 @@ class XkorApplication(QApplication):
     def setModified(self, newModified=True):
         self.modified = newModified
         self.mainWindow.setWindowModified(newModified)
+
+    def setThemeDark(self, dark):
+        theme.set_mode(self, "dark" if dark else "light")
 
     def setResultExportDirectory(self, dir):
         self.settings.setValue("resultExportDirectory", dir)
