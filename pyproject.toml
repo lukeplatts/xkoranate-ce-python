@@ -23,7 +23,7 @@ build-backend = "setuptools.build_meta"
 packages = { find = { include = ["xkoranate*"] } }
 
 [tool.setuptools.package-data]
-xkoranate = ["icons/*.png", "icons/*.icns"]
+xkoranate = ["icons/*.png", "icons/*.icns", "icons/*.ico"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,145 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag to release (e.g. v0.4.0-pr1). Must already exist or will be created from the current ref."
+        required: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  build-macos:
+    name: Build macOS app
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create venv and install build dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -e . pyinstaller
+
+      - name: Build xkoranate.app
+        run: ./build_app.sh
+
+      - name: Zip app bundle (preserving bundle structure/permissions)
+        run: |
+          cd dist
+          ditto -c -k --sequesterRsrc --keepParent xkoranate.app ../xkoranate-macos.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xkoranate-macos
+          path: xkoranate-macos.zip
+
+  build-windows:
+    name: Build Windows app
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create venv and install build dependencies
+        run: |
+          python -m venv .venv
+          .venv\Scripts\pip install -e . pyinstaller
+
+      - name: Build xkoranate.exe
+        run: .\build_app.bat
+
+      - name: Zip app folder
+        run: Compress-Archive -Path dist\xkoranate -DestinationPath xkoranate-windows.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xkoranate-windows
+          path: xkoranate-windows.zip
+
+  build-linux:
+    name: Build Linux app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Qt runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libegl1 \
+            libgl1 \
+            libxkbcommon0 \
+            libdbus-1-3 \
+            libnss3 \
+            libxcomposite1 \
+            libxrandr2 \
+            libxi6 \
+            libxtst6 \
+            libxcb-cursor0 \
+            libglib2.0-0 \
+            libfontconfig1
+
+      - name: Create venv and install build dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -e . pyinstaller
+
+      - name: Build xkoranate binary
+        run: ./build_app.sh
+
+      - name: Tar app folder (preserving exec bits)
+        run: tar -C dist -czf xkoranate-linux.tar.gz xkoranate
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: xkoranate-linux
+          path: xkoranate-linux.tar.gz
+
+  publish-release:
+    name: Publish draft GitHub release
+    needs: [build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Determine tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            echo "tag=${{ github.event.inputs.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create draft release with build artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          draft: true
+          generate_release_notes: true
+          files: |
+            artifacts/xkoranate-macos/xkoranate-macos.zip
+            artifacts/xkoranate-windows/xkoranate-windows.zip
+            artifacts/xkoranate-linux/xkoranate-linux.tar.gz
