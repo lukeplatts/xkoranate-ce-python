@@ -1,14 +1,12 @@
-import os
 import sys
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QButtonGroup, QComboBox, QDoubleSpinBox,
                                QFormLayout, QGridLayout, QHBoxLayout,
-                               QMessageBox, QRadioButton, QStyle, QVBoxLayout,
+                               QMessageBox, QRadioButton, QVBoxLayout,
                                QWidget)
 
-from ..paths import iconsDir
+from ..ui.dialogs import message_box
 from ..variant import toString
 from .rpbonuswidgets.olympicrpbonuswidget import XkorOlympicRPBonusWidget
 from .rpbonuswidgets.wc36rpbonuswidget import XkorWC36RPBonusWidget
@@ -19,6 +17,7 @@ class XkorRPEditor(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.m_data = None
         self.isLoading = False
         self.m_currentRPCalcType = ""
@@ -118,16 +117,12 @@ class XkorRPEditor(QWidget):
         newRPCalcType = toString(self.m_rpCalcType.itemData(self.m_rpCalcType.currentIndex()))
         if self.m_currentRPCalcType != newRPCalcType:
             if len(self.m_rpBonus.bonuses()) > 0:
-                warning = QMessageBox(QMessageBox.NoIcon, "xkoranate",
-                                      "Are you sure you want to reset all bonuses by changing the bonus formula?",
-                                      QMessageBox.Ok | QMessageBox.Cancel, self)
-                warning.setInformativeText("If you change the bonus formula, all of your bonuses will be lost.")
-                iconSize = self.style().pixelMetric(QStyle.PM_MessageBoxIconSize)
-                warning.setIconPixmap(QPixmap(os.path.join(iconsDir(), "xkoranate.png"))
-                                      .scaled(iconSize, iconSize, Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
-                warning.setDefaultButton(QMessageBox.Cancel)
-                warning.setEscapeButton(QMessageBox.Cancel)
-                warning.setWindowModality(Qt.WindowModal)
+                warning = message_box(
+                    self, "Are you sure you want to reset all bonuses by changing the bonus formula?",
+                    QMessageBox.Ok | QMessageBox.Cancel,
+                    informativeText="If you change the bonus formula, all of your bonuses will be lost.",
+                    defaultButton=QMessageBox.Cancel, escapeButton=QMessageBox.Cancel,
+                    destructiveButton=QMessageBox.Ok)
                 r = warning.exec()
                 if r == QMessageBox.Cancel:
                     self.m_rpCalcType.setCurrentIndex(self.m_rpCalcType.findData(self.m_currentRPCalcType))

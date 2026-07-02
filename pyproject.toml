@@ -3,7 +3,11 @@ name = "xkoranate-ce"
 version = "0.4.0"
 description = "xkoranate Community Edition — sports scorinator for NS Sports (Python port)"
 requires-python = ">=3.10"
-dependencies = ["PySide6>=6.6"]
+dependencies = [
+    "PySide6>=6.6",
+    "pyqtdarktheme2>=2.1",
+    "qtawesome>=1.3",
+]
 
 [project.gui-scripts]
 xkoranate = "xkoranate.main:main"
