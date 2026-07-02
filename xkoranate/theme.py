@@ -1,32 +1,38 @@
 """Central place for the application's visual theme.
 
-A flat, modern theme is applied via PyQtDarkTheme (qdarktheme), in either
-light or dark mode, with a single fixed accent colour running through both.
+A flat, modern theme is applied via PyQtDarkTheme (qdarktheme), in one of
+three modes — light, dark, or true dark (an OLED-friendly, pure-black variant
+of dark) — with a single fixed accent colour running through all of them.
 Other modules (icons.py, ui/typography.py, eventeditor.py's wizard
 breadcrumb) read ACCENT / ink() / muted() from here rather than hardcoding
 colours, and listen on `signal.changed` so everything re-tints together when
-the mode is toggled at runtime.
+the mode is switched at runtime.
 """
 
 from PySide6.QtCore import QObject, QSettings, Signal
 
-# fixed in both modes — deliberately not qdarktheme's default blue. Used for
+# fixed in all modes — deliberately not qdarktheme's default blue. Used for
 # fills/indicators (buttons, toggle switch, radio/checkbox) where contrast is
 # checked against an adjacent colour, not for literal text on a page.
 ACCENT = "#8EC23A"
 
-_INK = {"light": "#37474f", "dark": "#eceff1"}       # icon / glyph colour
-_MUTED = {"light": "#78909c", "dark": "#90a4ae"}     # secondary/de-emphasised text
+MODES = ["light", "dark", "oled"]
+MODE_LABELS = {"light": "Light", "dark": "Dark", "oled": "True Dark (OLED)"}
+
+# "oled" is dark's text/glyph colours over a pure-black background, so it
+# shares dark's entries in the dicts below.
+_INK = {"light": "#37474f", "dark": "#eceff1", "oled": "#eceff1"}     # icon / glyph colour
+_MUTED = {"light": "#78909c", "dark": "#90a4ae", "oled": "#90a4ae"}   # secondary/de-emphasised text
 
 # ACCENT itself is ~2.1:1 against white — well under WCAG AA's 4.5:1 for text.
 # Use a darkened/lightened same-hue variant wherever the accent colours a
 # text glyph directly (e.g. the wizard breadcrumb) instead of filling a shape.
-_ACCENT_TEXT = {"light": "#4E6B20", "dark": ACCENT}
+_ACCENT_TEXT = {"light": "#4E6B20", "dark": ACCENT, "oled": ACCENT}
 
 # for destructive actions (Discard, "lose your changes" confirmations) — kept
 # out of the main ACCENT so a "yes, delete this" button never reads as the
 # safe/positive choice. Also mode-tuned for contrast, same reasoning as above.
-_DANGER = {"light": "#C13333", "dark": "#E06C6C"}
+_DANGER = {"light": "#C13333", "dark": "#E06C6C", "oled": "#E06C6C"}
 
 _SETTINGS_KEY = "themeMode"
 DEFAULT_MODE = "light"
@@ -45,12 +51,13 @@ def _settings():
 
 
 def mode():
-    """The active theme mode, "light" or "dark"."""
+    """The active theme mode: "light", "dark", or "oled"."""
     return _settings().value(_SETTINGS_KEY, DEFAULT_MODE)
 
 
 def is_dark():
-    return mode() == "dark"
+    """True for "dark" and "oled" — modes that share dark's icon/text colours."""
+    return mode() in ("dark", "oled")
 
 
 def ink():
@@ -90,12 +97,20 @@ def apply(app):
         import qdarktheme
     except Exception:
         return
-    qdarktheme.setup_theme(mode(), custom_colors={"primary": ACCENT})
+    currentMode = mode()
+    customColors = {"primary": ACCENT}
+    # qdarktheme has no OLED mode of its own — "oled" is dark's palette with
+    # the background forced to pure black instead of its usual dark grey.
+    qdarkthemeMode = "dark" if currentMode == "oled" else currentMode
+    if currentMode == "oled":
+        customColors["background"] = "#000000"
+    qdarktheme.setup_theme(qdarkthemeMode, custom_colors=customColors)
 
 
 def set_mode(app, newMode):
-    """Switch between "light" and "dark", persist the choice, re-apply the
-    stylesheet, and notify listeners (icons, breadcrumb, etc.) to re-tint."""
+    """Switch between "light", "dark", and "oled", persist the choice,
+    re-apply the stylesheet, and notify listeners (icons, breadcrumb, etc.)
+    to re-tint."""
     if newMode == mode():
         return
     _settings().setValue(_SETTINGS_KEY, newMode)
