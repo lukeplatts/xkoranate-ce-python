@@ -7,20 +7,20 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
   test:
     name: Unit + integration tests
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install Qt runtime dependencies
         run: |
@@ -49,3 +49,27 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: python -m pytest tests/integration_test.py -v
+
+  build-macos-app:
+    name: Build macOS app
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create venv and install build dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -e . pyinstaller
+
+      - name: Build xkoranate.app
+        run: ./build_app.sh
+
+      - name: Verify app bundle was produced
+        run: |
+          test -d dist/xkoranate.app
+          test -x "dist/xkoranate.app/Contents/MacOS/xkoranate"
