@@ -73,3 +73,67 @@ jobs:
         run: |
           test -d dist/xkoranate.app
           test -x "dist/xkoranate.app/Contents/MacOS/xkoranate"
+
+  build-windows-app:
+    name: Build Windows app
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Create venv and install build dependencies
+        run: |
+          python -m venv .venv
+          .venv\Scripts\pip install -e . pyinstaller
+
+      - name: Build xkoranate.exe
+        run: .\build_app.bat
+
+      - name: Verify exe was produced
+        run: |
+          if (-not (Test-Path "dist\xkoranate\xkoranate.exe")) { exit 1 }
+
+  build-linux-app:
+    name: Build Linux app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Qt runtime dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libegl1 \
+            libgl1 \
+            libxkbcommon0 \
+            libdbus-1-3 \
+            libnss3 \
+            libxcomposite1 \
+            libxrandr2 \
+            libxi6 \
+            libxtst6 \
+            libxcb-cursor0 \
+            libglib2.0-0 \
+            libfontconfig1
+
+      - name: Create venv and install build dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -e . pyinstaller
+
+      - name: Build xkoranate binary
+        run: ./build_app.sh
+
+      - name: Verify binary was produced
+        run: |
+          test -d dist/xkoranate
+          test -x "dist/xkoranate/xkoranate"
