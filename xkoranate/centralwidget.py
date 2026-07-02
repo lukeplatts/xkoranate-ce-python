@@ -1,17 +1,13 @@
-import os
-
 from PySide6.QtCore import QDir, QFileInfo, Qt, Signal
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import (QFileDialog, QGridLayout, QMessageBox,
-                               QStackedWidget, QStyle, QWidget)
+from PySide6.QtWidgets import QFileDialog, QGridLayout, QMessageBox, QStackedWidget, QWidget
 
 from .event import XkorEvent
 from .eventeditor.eventeditor import XkorEventEditor
 from .navigationwidget import XkorNavigationWidget
-from .paths import iconsDir
 from .rpeditor.rpeditor import XkorRPEditor
 from .rplist import XkorRPList
 from .thinsplitter import XkorThinSplitter
+from .ui.dialogs import message_box
 
 
 class XkorCentralWidget(QWidget):
@@ -23,6 +19,7 @@ class XkorCentralWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.currentEvent = None
         self.currentFileName = ""
         self.modified = False
@@ -204,14 +201,11 @@ class XkorCentralWidget(QWidget):
 
     def showUnsavedDialog(self):
         displayFileName = "untitled" if self.currentFileName == "" else QFileInfo(self.currentFileName).fileName()
-        warning = QMessageBox(QMessageBox.NoIcon, "xkoranate",
-                              "Do you want to save the changes you made to “%s”?" % displayFileName,
-                              QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel, self)
-        iconSize = self.style().pixelMetric(QStyle.PM_MessageBoxIconSize)
-        warning.setIconPixmap(QPixmap(os.path.join(iconsDir(), "xkoranate.png"))
-                              .scaled(iconSize, iconSize, Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
-        warning.setInformativeText("Your changes will be lost if you don’t save them.")
-        warning.setWindowModality(Qt.WindowModal)
+        warning = message_box(
+            self, "Do you want to save the changes you made to “%s”?" % displayFileName,
+            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+            informativeText="Your changes will be lost if you don’t save them.",
+            destructiveButton=QMessageBox.Discard)
         return warning.exec()
 
     def updateCurrentEvent(self):
