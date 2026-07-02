@@ -7,10 +7,12 @@ import os
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QMessageBox, QStyle
+from PySide6.QtWidgets import (QDialog, QDialogButtonBox, QMessageBox,
+                               QPlainTextEdit, QStyle, QVBoxLayout)
 
 from .. import theme
 from ..paths import iconsDir
+from .fonts import monospace_font
 
 
 def brand_pixmap(widget, size=None):
@@ -60,3 +62,28 @@ def message_box(parent, text, buttons, informativeText="", icon=QMessageBox.NoIc
                 % (theme.muted(), theme.muted()))
 
     return box
+
+
+def text_preview_dialog(parent, title, text):
+    """Show read-only text (a schedule, odds, etc.) in its own modal dialog.
+    Never reuse a results/output text widget for this — overwriting it
+    leaves no way back to whatever it was showing before short of navigating
+    away and back."""
+    dialog = QDialog(parent)
+    dialog.setWindowTitle(title)
+    dialog.setWindowModality(Qt.WindowModal)
+    dialog.resize(560, 420)
+
+    preview = QPlainTextEdit(text)
+    preview.setReadOnly(True)
+    preview.setFont(monospace_font())
+
+    buttons = QDialogButtonBox(QDialogButtonBox.Close)
+    buttons.rejected.connect(dialog.reject)
+    buttons.accepted.connect(dialog.accept)
+
+    layout = QVBoxLayout(dialog)
+    layout.addWidget(preview, 1)
+    layout.addWidget(buttons)
+
+    dialog.exec()
