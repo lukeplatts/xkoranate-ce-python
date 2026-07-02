@@ -78,6 +78,26 @@ covering a much wider range of real-world machines. The launch-check step
 verifies against an `ubuntu:22.04` container specifically (not `latest`) so
 a future runner bump can't quietly reintroduce the same regression.
 
+## Crash/launch logging
+
+A GUI app run by double-clicking has no terminal attached, so any failure —
+including the glibc mismatch above — was previously invisible to the user
+reporting it, leaving nothing to diagnose except reproducing their exact
+environment by hand. `build_app.sh` now wraps the real executable in a
+launcher script (`dist/xkoranate/xkoranate` on Linux,
+`xkoranate.app/Contents/MacOS/xkoranate` on macOS; the real binary is
+renamed to `xkoranate-bin` alongside it) that tees all output to
+`launch.log` in a per-OS log directory — this is the only way to capture a
+crash that happens before Python itself starts, since nothing in the app's
+own code has run yet to catch it. [xkoranate/crashlog.py](xkoranate/crashlog.py)
+additionally installs a `sys.excepthook` covering anything after Python
+starts, writing a structured `app.log` (with OS/Python/glibc info) and
+showing a native dialog pointing the user at it. See
+[docs/getting-started.md](docs/getting-started.md#if-something-goes-wrong)
+for the exact log paths. Windows only gets the Python-level `app.log` for
+now — no wrapper script — since no equivalent pre-Python failure has been
+observed there.
+
 Tagged releases (`v*`) trigger `.github/workflows/release.yml`, which builds
 all three platforms in CI and attaches the zipped artifacts to a draft GitHub
 release. See [ROADMAP.md](ROADMAP.md) for the Windows-support feasibility
