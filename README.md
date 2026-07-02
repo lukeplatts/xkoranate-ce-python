@@ -5,7 +5,7 @@ A faithful Python/PySide6 port of [xkoranate-CE](https://github.com/NS-Sports/Xk
 the sports roleplay forum for NationStates. Originally written in Qt4/C++ by
 Commerce Heights/ThirdGeek; this port preserves the original program's behavior —
 scorination math, competition formats, file formats and UI — while running on
-current macOS via Python and Qt 6.
+current macOS, Windows, and Linux via Python and Qt 6.
 
 It simulates results for one hundred–plus disciplines across sixty-plus sports:
 mass starts, head-to-head matches, round robins, multi-run events, shooting and
@@ -22,21 +22,38 @@ python3 -m venv .venv
 .venv/bin/python -m xkoranate
 ```
 
-## Building the macOS app
+## Building the app
+
+The same PyInstaller spec (`xkoranate.spec`) produces a native build on
+macOS, Windows, and Linux — it branches on the host platform automatically.
+
+macOS/Linux:
 
 ```sh
 .venv/bin/pip install pyinstaller
-./build_app.sh          # produces dist/xkoranate.app
+./build_app.sh
+# macOS -> dist/xkoranate.app
+# Linux -> dist/xkoranate/xkoranate
 ```
 
-The app bundles the `sports/` definitions directory into
-`xkoranate.app/Contents/Resources/sports/`, same as the original Mac build.
-Sport parameter files are plain XML and remain user-editable there. The
-PyInstaller spec also bundles the `qt-material` and `qtawesome` data files so
-the theme and icons work in the frozen app.
+Windows:
 
-See [ROADMAP.md](ROADMAP.md) for a prioritized list of upstream issues and a
-Windows-support feasibility plan.
+```bat
+.venv\Scripts\pip install pyinstaller
+build_app.bat
+:: -> dist\xkoranate\xkoranate.exe
+```
+
+The build bundles the `sports/` definitions directory alongside the app
+(`Contents/Resources/sports/` on macOS, `sports/` next to the exe/binary on
+Windows/Linux). Sport parameter files are plain XML and remain user-editable
+there. The PyInstaller spec also bundles the `qdarktheme` and `qtawesome`
+data files so the theme and icons work in the frozen app.
+
+Tagged releases (`v*`) trigger `.github/workflows/release.yml`, which builds
+all three platforms in CI and attaches the zipped artifacts to a draft GitHub
+release. See [ROADMAP.md](ROADMAP.md) for the Windows-support feasibility
+notes this was based on.
 
 ## Project layout
 
