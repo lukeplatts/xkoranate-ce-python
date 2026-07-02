@@ -86,6 +86,31 @@ class XkorAbstractH2HParadigm(XkorAbstractParadigm):
     def comparisonFunction(self, type=""):
         return XkorH2HResultComparator(type, self.opt)
 
+    def estimateOdds(self, home, away, trials=1000):
+        """Monte Carlo estimate of regular-time win/draw/loss probabilities
+        for a specific home/away pairing. Runs on an isolated PRNG so this
+        never perturbs the sequence used for real scorination."""
+        from ..rng import Mt19937
+        from ..sport import XkorSport
+
+        simSport = XkorSport()
+        simSport.m_paradigmOptions = dict(self.s.m_paradigmOptions)
+        simSport.m_dataPoints = {k: dict(v) for k, v in self.s.m_dataPoints.items()}
+        simSport.r = Mt19937()
+        simParadigm = type(self)(simSport, self.userOpt)
+
+        wins = draws = losses = 0
+        for _ in range(trials):
+            homeResult, awayResult = simParadigm.generateFTScore(home, away)
+            if homeResult.score() > awayResult.score():
+                wins += 1
+            elif homeResult.score() < awayResult.score():
+                losses += 1
+            else:
+                draws += 1
+
+        return {"win": wins / trials, "draw": draws / trials, "loss": losses / trials}
+
     def newAthleteWidget(self):
         if (toString(self.userOpt.get("styleMods")) != "false"
                 or toString(self.userOpt.get("NSFSStyleMods")) != "false"):
