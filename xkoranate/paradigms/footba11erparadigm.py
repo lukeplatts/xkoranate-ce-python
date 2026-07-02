@@ -16,15 +16,17 @@ class XkorFootba11erParadigm(XkorAbstractH2HParadigm):
 
     def newOptionsWidget(self, paradigmOptions):
         from .options.footba11erparadigmoptions import XkorFootba11erParadigmOptions
-        return XkorFootba11erParadigmOptions(paradigmOptions)
+        return XkorFootba11erParadigmOptions(paradigmOptions, self._defaultHomeAdvantageMagnitude())
 
     # protected:
+
+    def _defaultHomeAdvantageMagnitude(self):
+        return toDouble(self.opt.get("homeAdvantage", 0.065))
 
     def homeAdvantageMagnitude(self):
         # the sport file provides a default magnitude; the options widget
         # lets the user override it per-event
-        default = toDouble(self.opt.get("homeAdvantage", 0.065))
-        return toDouble(self.userOpt.get("homeAdvantageMagnitude", default))
+        return toDouble(self.userOpt.get("homeAdvantageMagnitude", self._defaultHomeAdvantageMagnitude()))
 
     def generateFTScore(self, home, away):
         # get the parameters
