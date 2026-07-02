@@ -3,11 +3,11 @@
 
 from PyInstaller.utils.hooks import collect_all
 
-# qt-material (theme .xml/.css.template + fonts) and qtawesome (icon fonts +
+# qdarktheme (stylesheet templates + svg icons) and qtawesome (icon fonts +
 # charmaps) load data files at runtime — collect them or the frozen app crashes
 # at startup even though the dev run works.
 _datas, _binaries, _hiddenimports = [], [], []
-for _pkg in ("qt_material", "qtawesome"):
+for _pkg in ("qdarktheme", "qtawesome"):
     d, b, h = collect_all(_pkg)
     _datas += d
     _binaries += b
@@ -77,7 +77,8 @@ app = BUNDLE(
         "CFBundleDisplayName": "xkoranate",
         "CFBundleShortVersionString": "0.4.0",
         "NSHighResolutionCapable": True,
-        # the original xkoranate UI is light-themed; opt out of dark mode
-        "NSRequiresAquaSystemAppearance": True,
+        # the app now ships its own light/dark toggle, so let macOS switch
+        # window chrome (title bar) freely instead of forcing Aqua
+        "NSRequiresAquaSystemAppearance": False,
     },
 )

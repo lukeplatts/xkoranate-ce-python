@@ -24,6 +24,7 @@ class XkorEventEditor(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.selectionModel = None
         self.stack = None
         self.signupListEditor = None
@@ -41,6 +42,10 @@ class XkorEventEditor(QWidget):
         self.initEventSetupWidget()
 
         self.initLayout()
+
+        # theme.MUTED differs between light/dark; the breadcrumb bakes it into
+        # rich-text HTML, so it needs an explicit repaint on toggle
+        theme.signal.changed.connect(self.updateStepIndicator)
 
     def goNext(self):
         self.prev.setDisabled(False)
@@ -70,12 +75,12 @@ class XkorEventEditor(QWidget):
             if i == active:
                 parts.append(
                     '<span style="color:%s; font-weight:600;">%d&nbsp;%s</span>'
-                    % (theme.ACCENT, i + 1, name))
+                    % (theme.accent_text(), i + 1, name))
             else:
                 parts.append(
                     '<span style="color:%s;">%d&nbsp;%s</span>'
-                    % (theme.MUTED, i + 1, name))
-        sep = '<span style="color:%s;">&nbsp;&nbsp;›&nbsp;&nbsp;</span>' % theme.MUTED
+                    % (theme.muted(), i + 1, name))
+        sep = '<span style="color:%s;">&nbsp;&nbsp;›&nbsp;&nbsp;</span>' % theme.muted()
         self.stepIndicator.setText(sep.join(parts))
 
     def initCompetitionSelector(self):
@@ -110,7 +115,8 @@ class XkorEventEditor(QWidget):
         self.prev.clicked.connect(self.goPrev)
         self.next = QPushButton("Continue")
         self.next.setDisabled(True)
-        self.next.setProperty("class", "primary")  # qt-material accent button
+        self.next.setStyleSheet(theme.primary_button_qss())
+        theme.signal.changed.connect(lambda: self.next.setStyleSheet(theme.primary_button_qss()))
         self.next.clicked.connect(self.goNext)
 
         # main layout

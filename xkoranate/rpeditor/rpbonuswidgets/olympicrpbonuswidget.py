@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QHeaderView, QTreeWidgetItemIterator
 
+from ...ui.fonts import column_width_for
 from ...variant import qNumber, toDouble
 from ..abstractrpbonuswidget import XkorAbstractRPBonusWidget
 from .olympicrpbonusdelegate import XkorOlympicRPBonusDelegate
@@ -19,7 +20,7 @@ class XkorOlympicRPBonusWidget(XkorAbstractRPBonusWidget):
         # set the column widths
         self.treeWidget.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.treeWidget.header().setSectionResizeMode(1, QHeaderView.Fixed)
-        self.treeWidget.header().resizeSection(1, 100)
+        self.treeWidget.header().resizeSection(1, column_width_for(self.treeWidget, "8888.88"))
 
         actions = [self.insertAction, self.deleteAction]
         self.setupLayout(actions)

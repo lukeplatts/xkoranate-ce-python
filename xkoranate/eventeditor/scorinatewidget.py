@@ -1,20 +1,19 @@
-import os
 import time
 
 from PySide6.QtCore import QDir, QSize, Qt, Signal
-from PySide6.QtGui import QAction, QFont, QPixmap
 from PySide6.QtWidgets import (QComboBox, QFileDialog, QMessageBox,
                                QPlainTextEdit, QStyle, QToolBar, QVBoxLayout,
                                QWidget)
 
 from ..event import XkorEvent
-from ..icons import icon
-from ..paths import iconsDir
+from ..icons import icon_action
 from ..rng import Mt19937
 from ..rplist import XkorRPList
 from ..signuplist import XkorSignupList
 from ..sport import XkorSport
 from ..startlist import XkorStartList
+from ..ui.dialogs import message_box
+from ..ui.fonts import monospace_font
 from ..ui.typography import heading_label
 
 
@@ -70,11 +69,6 @@ def _cloneEvent(e):
     return rval
 
 
-def _xkoranatePixmap(iconSize):
-    return (QPixmap(os.path.join(iconsDir(), "xkoranate.png"))
-            .scaled(iconSize, iconSize, Qt.IgnoreAspectRatio, Qt.SmoothTransformation))
-
-
 class XkorScorinateWidget(QWidget):
     resultConfirmed = Signal(int, str)
     resultExportDirectoryChanged = Signal(str)
@@ -82,6 +76,7 @@ class XkorScorinateWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.c = None
         self.lastMatchday = -1
 
@@ -98,11 +93,11 @@ class XkorScorinateWidget(QWidget):
         label = heading_label("Scorinate event", level=1, center=True)
 
         # actions for scorinate widget buttons
-        self.scorinateAction = QAction(icon("roll"), "Scorinate event", self)
+        self.scorinateAction = icon_action("roll", "Scorinate event", self)
         self.scorinateAction.triggered.connect(self.scorinate)
         self.scorinateAction.triggered.connect(self.updateButtons)
 
-        self.exportResultsAction = QAction(icon("document-export"), "Export to file", self)
+        self.exportResultsAction = icon_action("document-export", "Export to file", self)
         self.exportResultsAction.setEnabled(False)
         self.exportResultsAction.triggered.connect(lambda: self.exportResults())
 
@@ -119,9 +114,7 @@ class XkorScorinateWidget(QWidget):
 
         self.textedit = QPlainTextEdit()
         self.textedit.setReadOnly(True)
-        font = QFont()
-        font.setStyleHint(QFont.TypeWriter)
-        self.textedit.setFont(QFont(font.defaultFamily()))
+        self.textedit.setFont(monospace_font())
 
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(label, 0, Qt.AlignCenter)
@@ -167,26 +160,23 @@ class XkorScorinateWidget(QWidget):
     def scorinate(self):
         if self.matchday.currentIndex() <= self.lastMatchday:
             if self.matchday.currentIndex() == self.lastMatchday:
-                warning = QMessageBox(QMessageBox.NoIcon, "xkoranate",
-                                      "Are you sure you want to regenerate %s?" % self.matchday.currentText(),
-                                      QMessageBox.Ok | QMessageBox.Cancel, self)
-                iconSize = self.style().pixelMetric(QStyle.PM_MessageBoxIconSize)
-                warning.setIconPixmap(_xkoranatePixmap(iconSize))
-                warning.setDefaultButton(QMessageBox.Cancel)
-                warning.setEscapeButton(QMessageBox.Cancel)
-                warning.setInformativeText("You will lose your existing results for this round if you regenerate them.")
-                warning.setWindowModality(Qt.WindowModal)
+                warning = message_box(
+                    self, "Are you sure you want to regenerate %s?" % self.matchday.currentText(),
+                    QMessageBox.Ok | QMessageBox.Cancel,
+                    informativeText="You will lose your existing results for this round if you regenerate them.",
+                    defaultButton=QMessageBox.Cancel, escapeButton=QMessageBox.Cancel,
+                    destructiveButton=QMessageBox.Ok)
                 result = warning.exec()
             else:
-                warning = QMessageBox(QMessageBox.Warning, "xkoranate",
-                                      "Are you sure you want to regenerate %s and lose all subsequent results?"
-                                      % self.matchday.currentText(),
-                                      QMessageBox.Ok | QMessageBox.Cancel, self)
-                warning.setDefaultButton(QMessageBox.Cancel)
-                warning.setEscapeButton(QMessageBox.Cancel)
-                warning.setInformativeText("You will lose your current results for %s through %s."
-                                           % (self.matchday.currentText(), self.matchday.itemText(self.lastMatchday)))
-                warning.setWindowModality(Qt.WindowModal)
+                warning = message_box(
+                    self, "Are you sure you want to regenerate %s and lose all subsequent results?"
+                    % self.matchday.currentText(),
+                    QMessageBox.Ok | QMessageBox.Cancel,
+                    informativeText="You will lose your current results for %s through %s."
+                    % (self.matchday.currentText(), self.matchday.itemText(self.lastMatchday)),
+                    icon=QMessageBox.Warning,
+                    defaultButton=QMessageBox.Cancel, escapeButton=QMessageBox.Cancel,
+                    destructiveButton=QMessageBox.Ok)
                 result = warning.exec()
             if result == QMessageBox.Cancel:
                 return
@@ -197,17 +187,13 @@ class XkorScorinateWidget(QWidget):
                 self.updateCompetition(resumeOpts, self.lastMatchday, self.c.results(self.lastMatchday))
 
         if self.matchday.currentIndex() > 0 and self.c.results(self.matchday.currentIndex() - 1) == "":
-            warning = QMessageBox(QMessageBox.NoIcon, "xkoranate",
-                                  "Do you want to generate results for %s through %s?"
-                                  % (self.matchday.itemText(self.lastMatchday + 1), self.matchday.currentText()),
-                                  QMessageBox.Ok | QMessageBox.Cancel, self)
-            iconSize = self.style().pixelMetric(QStyle.PM_MessageBoxIconSize)
-            warning.setIconPixmap(_xkoranatePixmap(iconSize))
-            warning.setDefaultButton(QMessageBox.Cancel)
-            warning.setEscapeButton(QMessageBox.Cancel)
-            warning.setInformativeText("This will generate %s rounds of results."
-                                       % (self.matchday.currentIndex() - self.lastMatchday))
-            warning.setWindowModality(Qt.WindowModal)
+            warning = message_box(
+                self, "Do you want to generate results for %s through %s?"
+                % (self.matchday.itemText(self.lastMatchday + 1), self.matchday.currentText()),
+                QMessageBox.Ok | QMessageBox.Cancel,
+                informativeText="This will generate %s rounds of results."
+                % (self.matchday.currentIndex() - self.lastMatchday),
+                defaultButton=QMessageBox.Cancel, escapeButton=QMessageBox.Cancel)
             result = warning.exec()
             if result == QMessageBox.Cancel:
                 return

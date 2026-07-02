@@ -5,7 +5,7 @@ description = "xkoranate Community Edition — sports scorinator for NS Sports (
 requires-python = ">=3.10"
 dependencies = [
     "PySide6>=6.6",
-    "qt-material>=2.17",
+    "pyqtdarktheme2>=2.1",
     "qtawesome>=1.3",
 ]
 
