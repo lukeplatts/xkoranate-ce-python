@@ -1,8 +1,8 @@
 site_name: xkoranate-CE
 site_description: User guide for xkoranate-ce-python, the sports scorinator for NS Sports
-site_url: https://lukeplatts.github.io/xkoranate-ce-python/
-repo_url: https://github.com/lukeplatts/xkoranate-ce-python
-repo_name: lukeplatts/xkoranate-ce-python
+site_url: https://ns-sports.github.io/xkoranate-ce-python/
+repo_url: https://github.com/NS-Sports/xkoranate-ce-python
+repo_name: NS-Sports/xkoranate-ce-python
 edit_uri: edit/main/docs/
 
 theme:
@@ -44,4 +44,4 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/lukeplatts/xkoranate-ce-python
+      link: https://github.com/NS-Sports/xkoranate-ce-python

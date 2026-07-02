@@ -35,5 +35,5 @@ xkoranate warns before discarding unsaved changes, same as the original:
 
 ## Getting help
 
-- Something not working? [File a bug report](https://github.com/lukeplatts/xkoranate-ce-python/issues/new?template=bug_report.yml).
-- Missing a feature? [Request it](https://github.com/lukeplatts/xkoranate-ce-python/issues/new?template=feature_request.yml) or check the [roadmap](https://github.com/lukeplatts/xkoranate-ce-python/blob/main/ROADMAP.md) for what's already planned.
+- Something not working? [File a bug report](https://github.com/NS-Sports/xkoranate-ce-python/issues/new?template=bug_report.yml).
+- Missing a feature? [Request it](https://github.com/NS-Sports/xkoranate-ce-python/issues/new?template=feature_request.yml) or check the [roadmap](https://github.com/NS-Sports/xkoranate-ce-python/blob/main/ROADMAP.md) for what's already planned.

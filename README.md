@@ -14,7 +14,7 @@ archery formats, and includes the league table generator.
 The interface has a modern, light Material-style theme (via `qt-material`) with
 Material Design Icons (`qtawesome`); the underlying behaviour is unchanged.
 
-**Using the app?** See the [user guide](https://lukeplatts.github.io/xkoranate-ce-python/)
+**Using the app?** See the [user guide](https://ns-sports.github.io/xkoranate-ce-python/)
 for downloads, a tour of the event editor, and the table generator. The rest
 of this README covers building and developing xkoranate itself.
 

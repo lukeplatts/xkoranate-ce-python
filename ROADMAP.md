@@ -41,13 +41,13 @@ Two issues are already resolved or moot:
 Tracked as issues in this repo (each links back to the original upstream
 report):
 
-- [#22](https://github.com/lukeplatts/xkoranate-ce-python/issues/22) Single-elimination tournaments — new bracket/competition logic + options widget. (upstream #6)
-- [#23](https://github.com/lukeplatts/xkoranate-ce-python/issues/23) New paradigms (boxing, MMA, quidditch, 3×3; Baseinator-style additive mods) — multiple new scoring engines. (upstream #11)
-- [#24](https://github.com/lukeplatts/xkoranate-ce-python/issues/24) Inter-conference play — new competition type + options file. (upstream #18)
-- [#25](https://github.com/lukeplatts/xkoranate-ce-python/issues/25) Sailing multi-round Olympic automation — domain-heavy. (upstream #5)
-- [#26](https://github.com/lukeplatts/xkoranate-ce-python/issues/26) Auto-racing multiclass / timed races — new options + paradigm work. (upstream #37)
-- [#27](https://github.com/lukeplatts/xkoranate-ce-python/issues/27) In-app formula/XML editor for sports — substantial new editor subsystem. (upstream #35)
-- [#28](https://github.com/lukeplatts/xkoranate-ce-python/issues/28) Document paradigms, paradigm options, and the sport-file XML format. (upstream #4)
+- [#22](https://github.com/NS-Sports/xkoranate-ce-python/issues/22) Single-elimination tournaments — new bracket/competition logic + options widget. (upstream #6)
+- [#23](https://github.com/NS-Sports/xkoranate-ce-python/issues/23) New paradigms (boxing, MMA, quidditch, 3×3; Baseinator-style additive mods) — multiple new scoring engines. (upstream #11)
+- [#24](https://github.com/NS-Sports/xkoranate-ce-python/issues/24) Inter-conference play — new competition type + options file. (upstream #18)
+- [#25](https://github.com/NS-Sports/xkoranate-ce-python/issues/25) Sailing multi-round Olympic automation — domain-heavy. (upstream #5)
+- [#26](https://github.com/NS-Sports/xkoranate-ce-python/issues/26) Auto-racing multiclass / timed races — new options + paradigm work. (upstream #37)
+- [#27](https://github.com/NS-Sports/xkoranate-ce-python/issues/27) In-app formula/XML editor for sports — substantial new editor subsystem. (upstream #35)
+- [#28](https://github.com/NS-Sports/xkoranate-ce-python/issues/28) Document paradigms, paradigm options, and the sport-file XML format. (upstream #4)
 
 **Suggested implementation order:** #3 → #36 → #2 → #8 → #9 → #1 → #7 → #34 →
 #33, then Tier 3 case-by-case.
