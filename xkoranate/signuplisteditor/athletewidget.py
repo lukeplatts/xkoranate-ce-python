@@ -3,13 +3,13 @@ import uuid
 
 from PySide6.QtCore import QDir, Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import (QFileDialog, QHeaderView, QTreeWidgetItem,
-                               QTreeWidgetItemIterator)
+from PySide6.QtWidgets import QFileDialog, QHeaderView, QTreeWidgetItemIterator
 
 from ..athlete import XkorAthlete
 from ..icons import icon
 from ..variant import qNumber, toDouble, toString
-from .abstractathletewidget import (XkorAbstractAthleteWidget, _indexOf,
+from .abstractathletewidget import (_AthleteTreeWidgetItem,
+                                    XkorAbstractAthleteWidget, _indexOf,
                                     _uuidFromString, _uuidToString)
 from .athletedelegate import XkorAthleteDelegate
 
@@ -138,7 +138,7 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
     def setAthletes(self, athletes):
         self.treeWidget.clear()
         for i in athletes:
-            item = QTreeWidgetItem(self.treeWidget)
+            item = _AthleteTreeWidgetItem(self.treeWidget, self.m_columnTypes)
             item.setFlags(item.flags() | Qt.ItemIsEditable)
             self.initItem(item, i.name, i.id, i.nation, i.skill, i.properties)
         self.listChanged.emit()
