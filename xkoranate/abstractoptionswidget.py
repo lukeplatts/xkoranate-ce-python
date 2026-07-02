@@ -1,4 +1,4 @@
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QWidget
 
 
@@ -7,6 +7,7 @@ class XkorAbstractOptionsWidget(QWidget):
 
     def __init__(self, opts, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.options = dict(opts)
 
     def getOptions(self):
