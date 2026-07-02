@@ -1,0 +1,59 @@
+name: Bug report
+description: Something in xkoranate-ce-python doesn't work like the original xkoranate-CE (or like it should)
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. If it's a behavior mismatch with the original C++ xkoranate-CE, say what the original does instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact steps (which sport, paradigm, competition type, settings) needed to trigger it.
+      placeholder: |
+        1. Create a new event with sport X, paradigm Y
+        2. ...
+        3. See error / wrong result
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen instead.
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: xkoranate version
+      description: Shown in the window title bar (e.g. "0.4.0-pr1").
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS
+        - Windows
+        - Linux
+        - Running from source
+    validations:
+      required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Relevant files
+      description: If applicable, attach the sport XML file, event file, or table generator file that reproduces the issue.
+    validations:
+      required: false

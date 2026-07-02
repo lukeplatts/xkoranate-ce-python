@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a new feature, paradigm, competition type, or improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's the use case?
+      description: What are you trying to do that xkoranate-ce-python can't do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How should this work? Reference the relevant sport/paradigm/competition type if applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds you're using today, or other approaches you considered.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Does this affect scorination math or file formats?
+      description: Changes here need extra care — see PORTING.md's "What NOT to change" section.
+      options:
+        - label: This changes scorination math, output formatting, or file formats
+        - label: This is purely additive (new option, new UI, new paradigm) and doesn't change existing behavior
+    validations:
+      required: false
