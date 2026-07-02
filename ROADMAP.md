@@ -53,6 +53,12 @@ Two issues are already resolved or moot:
 
 ## 2. Windows support — feasibility
 
+**Status: implemented** — `xkoranate.spec` now branches on `sys.platform`
+(macOS `.app` bundle vs. Windows/Linux onedir build with a `.ico` icon), CI
+builds and verifies all three platforms on every push, and
+`.github/workflows/release.yml` publishes the built artifacts to a draft
+GitHub release on tag push.
+
 **Verdict: highly feasible. The core application needs essentially zero code
 changes.** The Python port uses Qt's cross-platform APIs throughout
 (`QSettings`, `QDir.homePath`, `QFileDialog`, `os.path.join`/`normpath`, font

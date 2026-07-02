@@ -1,5 +1,8 @@
-# PyInstaller spec for the xkoranate-CE macOS app bundle.
+# PyInstaller spec for the xkoranate-CE app — builds a macOS .app bundle,
+# a Windows onedir exe, or a Linux onedir binary depending on the host OS.
 # Build with: .venv/bin/pyinstaller --noconfirm xkoranate.spec
+
+import sys
 
 from PyInstaller.utils.hooks import collect_all
 
@@ -60,6 +63,7 @@ exe = EXE(
     strip=False,
     upx=False,
     console=False,
+    icon="xkoranate/icons/xkoranate.ico" if sys.platform == "win32" else None,
 )
 
 coll = COLLECT(
@@ -71,18 +75,21 @@ coll = COLLECT(
     name="xkoranate",
 )
 
-app = BUNDLE(
-    coll,
-    name="xkoranate.app",
-    icon="xkoranate/icons/xkoranate.icns",
-    bundle_identifier="com.thirdgeek.xkoranate",
-    info_plist={
-        "CFBundleName": "xkoranate",
-        "CFBundleDisplayName": "xkoranate",
-        "CFBundleShortVersionString": "0.4.0",
-        "NSHighResolutionCapable": True,
-        # the app now ships its own light/dark toggle, so let macOS switch
-        # window chrome (title bar) freely instead of forcing Aqua
-        "NSRequiresAquaSystemAppearance": False,
-    },
-)
+# macOS gets a proper .app bundle; Windows/Linux ship as the onedir COLLECT
+# output produced above (dist/xkoranate/xkoranate[.exe]).
+if sys.platform == "darwin":
+    app = BUNDLE(
+        coll,
+        name="xkoranate.app",
+        icon="xkoranate/icons/xkoranate.icns",
+        bundle_identifier="com.thirdgeek.xkoranate",
+        info_plist={
+            "CFBundleName": "xkoranate",
+            "CFBundleDisplayName": "xkoranate",
+            "CFBundleShortVersionString": "0.4.0",
+            "NSHighResolutionCapable": True,
+            # the app now ships its own light/dark toggle, so let macOS switch
+            # window chrome (title bar) freely instead of forcing Aqua
+            "NSRequiresAquaSystemAppearance": False,
+        },
+    )
