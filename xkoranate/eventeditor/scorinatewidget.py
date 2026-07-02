@@ -1,7 +1,7 @@
 import time
 
 from PySide6.QtCore import QDir, QSize, Qt, Signal
-from PySide6.QtWidgets import (QComboBox, QFileDialog, QMessageBox,
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QMessageBox,
                                QPlainTextEdit, QStyle, QToolBar, QVBoxLayout,
                                QWidget)
 
@@ -112,6 +112,9 @@ class XkorScorinateWidget(QWidget):
         self.matchday.currentIndexChanged.connect(self.updateButtons)
         self.matchday.currentIndexChanged.connect(self.updateResults)
 
+        self.bbcodeCheckBox = QCheckBox("BBCode output ([pre] tags)")
+        self.bbcodeCheckBox.toggled.connect(lambda: self.updateResults(self.matchday.currentIndex()))
+
         self.textedit = QPlainTextEdit()
         self.textedit.setReadOnly(True)
         self.textedit.setFont(monospace_font())
@@ -119,6 +122,7 @@ class XkorScorinateWidget(QWidget):
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(label, 0, Qt.AlignCenter)
         self.layout.addWidget(self.matchday, 0, Qt.AlignHCenter)
+        self.layout.addWidget(self.bbcodeCheckBox, 0, Qt.AlignHCenter)
         self.layout.addWidget(self.textedit, 1)
         self.layout.addWidget(toolBar, 0, Qt.AlignCenter)
 
@@ -269,4 +273,9 @@ class XkorScorinateWidget(QWidget):
             self.e.competitionOptions(), self.e.results())
 
     def updateResults(self, matchday):
-        self.textedit.setPlainText(self.c.results(matchday))
+        self.textedit.setPlainText(self._formatResults(self.c.results(matchday)))
+
+    def _formatResults(self, text):
+        if self.bbcodeCheckBox.isChecked() and text != "":
+            return "[pre]%s[/pre]" % text
+        return text
