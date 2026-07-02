@@ -9,7 +9,7 @@
 	<paradigm>nsfs</paradigm>
 	<paradigmOptions>
 		<string type="resultStyle">gaelic</string>
-		<double type="homeAdvantage">7.5</double>
+		<double type="homeAdvantage">1.333333333333</double>
 		<double type="homeAdvantageGG">0.133333333333</double>
 		<list type="attackCoeffs">
 			<double>0.06</double>
