@@ -1,7 +1,6 @@
 from PySide6.QtCore import QDir, QFileInfo, QSettings, Qt
-from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QSizePolicy,
-                               QToolBar, QWidget)
+from PySide6.QtGui import QAction, QActionGroup, QKeySequence
+from PySide6.QtWidgets import QApplication, QToolBar
 
 from . import __version__
 from .centralwidget import XkorCentralWidget
@@ -9,7 +8,6 @@ from .icons import icon, icon_action
 from .mainwindow import XkorMainWindow
 from .paths import sportsDir
 from . import theme
-from .ui.toggleswitch import XkorToggleSwitch
 from .variant import toStringList
 
 
@@ -64,11 +62,22 @@ class XkorApplication(QApplication):
         self.quitAction.setShortcut(QKeySequence(QKeySequence.Quit))
         self.quitAction.triggered.connect(self.closeAllWindows)
 
-        self.darkModeAction = QAction("Dark mode", self)
-        self.darkModeAction.setCheckable(True)
-        self.darkModeAction.setChecked(theme.is_dark())
-        self.darkModeAction.setShortcut(QKeySequence(Qt.CTRL | Qt.SHIFT | Qt.Key_D))
-        self.darkModeAction.toggled.connect(self.setThemeDark)
+        # View menu's theme choice — light/dark/OLED are mutually exclusive,
+        # so a QActionGroup gives us the radio-button behaviour for free
+        self.themeActionGroup = QActionGroup(self)
+        self.themeActionGroup.setExclusive(True)
+        self.themeActions = {}
+        currentMode = theme.mode()
+        for themeMode in theme.MODES:
+            action = QAction(theme.MODE_LABELS[themeMode], self)
+            action.setCheckable(True)
+            action.setChecked(themeMode == currentMode)
+            action.triggered.connect(lambda checked, m=themeMode: theme.set_mode(self, m))
+            self.themeActionGroup.addAction(action)
+            self.themeActions[themeMode] = action
+        # keep the menu's radio selection in sync if the theme changes some
+        # other way (e.g. restored from settings on next launch)
+        theme.signal.changed.connect(self._syncThemeActions)
 
         # menu bar — the standard cross-platform place shortcuts are
         # discoverable; the toolbar's icons/tooltips don't show them
@@ -85,7 +94,8 @@ class XkorApplication(QApplication):
         fileMenu.addAction(self.quitAction)
 
         viewMenu = menuBar.addMenu("&View")
-        viewMenu.addAction(self.darkModeAction)
+        for themeMode in theme.MODES:
+            viewMenu.addAction(self.themeActions[themeMode])
 
         # toolbar
         self.toolBar = QToolBar()
@@ -97,26 +107,6 @@ class XkorApplication(QApplication):
         self.toolBar.addAction(self.saveAsAction)
         self.toolBar.addSeparator()
         self.toolBar.addAction(self.tableAction)
-
-        # push the theme switch to the far right of the toolbar
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        self.toolBar.addWidget(spacer)
-
-        themeBox = QWidget()
-        themeRow = QHBoxLayout(themeBox)
-        themeRow.setContentsMargins(0, 0, 8, 0)
-        themeRow.setSpacing(6)
-        themeRow.addWidget(QLabel("Dark mode"))
-        self.themeSwitch = XkorToggleSwitch()
-        self.themeSwitch.setChecked(theme.is_dark())
-        self.themeSwitch.setToolTip("Switch between light and dark mode")
-        self.themeSwitch.toggled.connect(self.setThemeDark)
-        # keep the toolbar switch and the View menu's checkbox in lockstep
-        self.themeSwitch.toggled.connect(self.darkModeAction.setChecked)
-        self.darkModeAction.toggled.connect(self.themeSwitch.setChecked)
-        themeRow.addWidget(self.themeSwitch)
-        self.toolBar.addWidget(themeBox)
 
         self.mainWindow.setCentralWidget(self.cw)
         self.mainWindow.addToolBar(self.toolBar)
@@ -171,8 +161,10 @@ class XkorApplication(QApplication):
         self.modified = newModified
         self.mainWindow.setWindowModified(newModified)
 
-    def setThemeDark(self, dark):
-        theme.set_mode(self, "dark" if dark else "light")
+    def _syncThemeActions(self):
+        action = self.themeActions.get(theme.mode())
+        if action is not None:
+            action.setChecked(True)
 
     def setResultExportDirectory(self, dir):
         self.settings.setValue("resultExportDirectory", dir)
