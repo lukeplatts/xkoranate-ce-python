@@ -8,6 +8,7 @@ from ..signuplist import XkorSignupList
 from ..signuplisteditor.signuplisteditor import XkorSignupListEditor
 from ..sport import XkorSport
 from .. import theme
+from ..ui.dialogs import text_preview_dialog
 from .competitionselector import XkorCompetitionSelector
 from .eventsetupwidget import XkorEventSetupWidget
 from .scorinatewidget import (XkorScorinateWidget, _cloneEvent, _cloneRPList,
@@ -91,6 +92,7 @@ class XkorEventEditor(QWidget):
     def initEventSetupWidget(self):
         self.eventSetupWidget = XkorEventSetupWidget()
         self.eventSetupWidget.listChanged.connect(self.setDataChanged)
+        self.eventSetupWidget.viewScheduleRequested.connect(self.viewSchedule)
         self.signupListEditor.itemDeleted.connect(self.eventSetupWidget.deleteAthlete)
 
     def initLayout(self):
@@ -248,3 +250,17 @@ class XkorEventEditor(QWidget):
 
     def updateSportList(self):
         self.sportSelector.updateSportList()
+
+    def viewSchedule(self):
+        from ..competitions.competitionfactory import XkorCompetitionFactory
+
+        self.updateData()
+        startList = self.m_data.makeStartList(self.m_rpList)
+        competition = XkorCompetitionFactory.newCompetitionFull(
+            self.m_data.competition(), startList, self.sport,
+            self.m_data.paradigmOptions(), self.m_data.competitionOptions(), {})
+
+        schedule = competition.schedule()
+        if schedule is None:
+            schedule = "This competition type doesn't have a fixed schedule to preview."
+        text_preview_dialog(self, "Full schedule", schedule)

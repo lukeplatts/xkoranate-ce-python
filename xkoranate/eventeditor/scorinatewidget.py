@@ -1,9 +1,9 @@
 import time
 
 from PySide6.QtCore import QDir, QSize, Qt, Signal
-from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
-                               QFileDialog, QMessageBox, QPlainTextEdit, QStyle,
-                               QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QMessageBox,
+                               QPlainTextEdit, QStyle, QToolBar, QVBoxLayout,
+                               QWidget)
 
 from ..event import XkorEvent
 from ..icons import icon_action
@@ -101,16 +101,11 @@ class XkorScorinateWidget(QWidget):
         self.exportResultsAction.setEnabled(False)
         self.exportResultsAction.triggered.connect(lambda: self.exportResults())
 
-        self.scheduleAction = icon_action("schedule", "View full schedule", self)
-        self.scheduleAction.setEnabled(False)
-        self.scheduleAction.triggered.connect(self.viewSchedule)
-
         # toolbar
         toolBar = QToolBar()
         small = self.style().pixelMetric(QStyle.PM_SmallIconSize)
         toolBar.setIconSize(QSize(small, small))
         toolBar.addAction(self.scorinateAction)
-        toolBar.addAction(self.scheduleAction)
         toolBar.addAction(self.exportResultsAction)
 
         self.matchday = QComboBox()
@@ -144,7 +139,6 @@ class XkorScorinateWidget(QWidget):
         self.textedit.setPlainText("")
         self.matchday.clear()
         self.matchday.hide()
-        self.scheduleAction.setEnabled(False)
 
     def exportResults(self, filename=None):
         # C++ overloads: exportResults() shows the dialog; exportResults(QString) writes
@@ -259,8 +253,6 @@ class XkorScorinateWidget(QWidget):
         else:
             self.matchday.show()
 
-        self.scheduleAction.setEnabled(self.c.schedule() is not None)
-
         self.lastMatchday = -1
         for i in range(len(matchdayNames)):
             if self.c.results(i) != "":
@@ -284,35 +276,6 @@ class XkorScorinateWidget(QWidget):
 
     def updateResults(self, matchday):
         self.textedit.setPlainText(self._formatResults(self.c.results(matchday)))
-
-    def viewSchedule(self):
-        schedule = self.c.schedule() if self.c is not None else None
-        if schedule is None:
-            return
-        self._showTextPreview("Full schedule", schedule)
-
-    def _showTextPreview(self, title, text):
-        # shown in its own dialog, never in self.textedit — that widget is
-        # the results view, and overwriting it left users with no way back
-        # to their actual scores short of reopening the event
-        dialog = QDialog(self)
-        dialog.setWindowTitle(title)
-        dialog.setWindowModality(Qt.WindowModal)
-        dialog.resize(560, 420)
-
-        preview = QPlainTextEdit(self._formatResults(text))
-        preview.setReadOnly(True)
-        preview.setFont(monospace_font())
-
-        buttons = QDialogButtonBox(QDialogButtonBox.Close)
-        buttons.rejected.connect(dialog.reject)
-        buttons.accepted.connect(dialog.accept)
-
-        layout = QVBoxLayout(dialog)
-        layout.addWidget(preview, 1)
-        layout.addWidget(buttons)
-
-        dialog.exec()
 
     def _formatResults(self, text):
         if self.bbcodeCheckBox.isChecked() and text != "":
