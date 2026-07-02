@@ -27,4 +27,4 @@ The `sports/` folder that ships alongside xkoranate contains the sport
 definition files — plain XML, one per sport, describing its paradigm and
 default options. They're user-editable if you know what you're doing, though
 there's no in-app editor for them yet (tracked in
-[issue #27](https://github.com/lukeplatts/xkoranate-ce-python/issues/27)).
+[issue #27](https://github.com/NS-Sports/xkoranate-ce-python/issues/27)).

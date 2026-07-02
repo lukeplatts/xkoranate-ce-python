@@ -3,7 +3,7 @@
 ## Download
 
 Grab the build for your platform from the
-[Releases page](https://github.com/lukeplatts/xkoranate-ce-python/releases).
+[Releases page](https://github.com/NS-Sports/xkoranate-ce-python/releases).
 Each release ships a build for macOS, Windows, and Linux.
 
 | Platform | Archive | Run |
