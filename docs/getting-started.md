@@ -18,17 +18,44 @@ Each release ships a build for macOS, Windows, and Linux.
     You'll need to explicitly allow the app to run — right-click → Open on
     macOS, or "More info" → "Run anyway" on Windows.
 
-!!! note "Linux: nothing to install"
+!!! note "Linux: nothing to install (on Linux Mint 21+ / Ubuntu 22.04+ or newer)"
     The Linux build ships with everything it needs already inside the
     `xkoranate/` folder — no system packages required on any regular Linux
     desktop. The one thing it can't bundle is your graphics driver
     (`libEGL`/`libGL`), but every desktop Linux install already has this,
     since it's needed to draw anything on screen at all.
 
-    If double-clicking `xkoranate/xkoranate` still does nothing, run it from
-    a terminal instead — it's likely a genuinely unusual setup (a minimal or
-    headless install without a graphics driver), and the terminal will print
-    the specific missing library so it can be installed.
+    The build requires **glibc 2.35 or newer** (Linux Mint 21+, Ubuntu
+    22.04+, Debian 12+, Fedora 36+, or comparably recent). This isn't
+    something the app can bundle its way around — glibc is the C library
+    everything else on the system links against, so it has to match what's
+    already installed.
+
+    If double-clicking `xkoranate/xkoranate` does nothing, check the log file
+    — see [If something goes wrong](#if-something-goes-wrong) below.
+
+## If something goes wrong
+
+If xkoranate crashes, or double-clicking it does nothing at all, it still
+writes a log file — no terminal required:
+
+| Platform | Log location |
+|---|---|
+| Linux | `~/.local/state/xkoranate/logs/` |
+| macOS | `~/Library/Logs/xkoranate/logs/` |
+| Windows | `%LOCALAPPDATA%\xkoranate\logs\` |
+
+There are two files worth checking:
+
+- **`launch.log`** (macOS/Linux only) — everything the app printed, captured
+  even if it failed before the app itself could start (e.g. an incompatible
+  system library). This is the one to check first for "nothing happens."
+- **`app.log`** — a structured record of anything that went wrong after the
+  app started, including a full error trace and basic system info (OS,
+  Python/Qt version).
+
+If you're reporting an issue, please attach both files (whichever exist) —
+it turns "it doesn't work" into something we can actually act on.
 
 ## The main window
 
