@@ -29,6 +29,7 @@ class XkorNSFSParadigm(XkorAbstractH2HParadigm):
         baseAttacksInferior = toInt(self.opt.get("baseAttacksInferior"))
         attackCoeffSuperior = toDouble(self.opt.get("attackCoeffSuperior"))
         attackCoeffInferior = toDouble(self.opt.get("attackCoeffInferior"))
+        homeAdvValue = (toDouble(self.opt.get("homeAdvantage")) if homeAdvantage else 1)
 
         if skill > oppSkill:
             attacks = int((baseAttacksSuperior + ((skill - oppSkill) * attackCoeffSuperior))
@@ -41,7 +42,7 @@ class XkorNSFSParadigm(XkorAbstractH2HParadigm):
         pGoal = 1 - ((bast + rankDiffModifier
                       * (math.pow(oppSkill * rankCoeff, rankScalar)
                          - math.pow(skill * rankCoeff, rankScalar)))
-                     / (baseAttackCoeff + (1 if homeAdvantage else 0)))
+                     / (baseAttackCoeff * homeAdvValue))
 
         # score
         rand = self.s.randUniform()
