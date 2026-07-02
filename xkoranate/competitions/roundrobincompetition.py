@@ -78,6 +78,28 @@ class XkorRoundRobinCompetition(XkorAbstractCompetition):
 
         return fixtures
 
+    def schedule(self):
+        groupSize = self.largestGroupSize(self.startList)
+        if groupSize == 0:
+            return None
+
+        matchdayNames = self.matchdayNames()
+        lines = []
+        for matchday in range(self.matchdays()):
+            fixtures = self.generateFixtures(matchday, groupSize)
+            lines.append(matchdayNames[matchday])
+            for i in self.startList.groups:
+                size = len(i.athletes)
+                pairs = [(h, a) for h, a in fixtures if h < size and a < size]
+                if not pairs:
+                    continue
+                if len(self.startList.groups) > 1:
+                    lines.append(i.name)
+                for home, away in pairs:
+                    lines.append(self._formatFixture(i.athletes[home], i.athletes[away]))
+            lines.append("")
+        return "\n".join(lines)
+
     def supportsOdds(self):
         return self._oddsParadigm() is not None
 
