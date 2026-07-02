@@ -13,7 +13,7 @@ from ..signuplist import XkorSignupList
 from ..sport import XkorSport
 from ..startlist import XkorStartList
 from ..ui.dialogs import message_box
-from ..ui.fonts import monospace_font
+from ..ui.fonts import monospace_font, widen_combo_popup
 from ..ui.typography import heading_label
 
 
@@ -109,6 +109,9 @@ class XkorScorinateWidget(QWidget):
         toolBar.addAction(self.exportResultsAction)
 
         self.matchday = QComboBox()
+        # repopulated whenever the competition changes, so AdjustToContents
+        # keeps it sized to the current matchday names
+        self.matchday.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         self.matchday.currentIndexChanged.connect(self.updateButtons)
         self.matchday.currentIndexChanged.connect(self.updateResults)
 
@@ -168,8 +171,7 @@ class XkorScorinateWidget(QWidget):
                     self, "Are you sure you want to regenerate %s?" % self.matchday.currentText(),
                     QMessageBox.Ok | QMessageBox.Cancel,
                     informativeText="You will lose your existing results for this round if you regenerate them.",
-                    defaultButton=QMessageBox.Cancel, escapeButton=QMessageBox.Cancel,
-                    destructiveButton=QMessageBox.Ok)
+                    defaultButton=QMessageBox.Cancel, escapeButton=QMessageBox.Cancel)
                 result = warning.exec()
             else:
                 warning = message_box(
@@ -179,8 +181,7 @@ class XkorScorinateWidget(QWidget):
                     informativeText="You will lose your current results for %s through %s."
                     % (self.matchday.currentText(), self.matchday.itemText(self.lastMatchday)),
                     icon=QMessageBox.Warning,
-                    defaultButton=QMessageBox.Cancel, escapeButton=QMessageBox.Cancel,
-                    destructiveButton=QMessageBox.Ok)
+                    defaultButton=QMessageBox.Cancel, escapeButton=QMessageBox.Cancel)
                 result = warning.exec()
             if result == QMessageBox.Cancel:
                 return
@@ -246,6 +247,7 @@ class XkorScorinateWidget(QWidget):
         matchdayNames = self.c.matchdayNames()
         for i in range(len(matchdayNames)):
             self.matchday.insertItem(i, matchdayNames[i])
+        widen_combo_popup(self.matchday)
         if len(matchdayNames) <= 1:
             self.matchday.hide()
         else:
