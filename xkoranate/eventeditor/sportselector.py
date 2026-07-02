@@ -83,7 +83,10 @@ class XkorSportSelector(QWidget):
         # check whether the paradigm has an options dialog
         from ..paradigms.paradigmfactory import XkorParadigmFactory
 
-        p = XkorParadigmFactory.newParadigm(s.paradigm())
+        # initialize with the sport (not just the type) so paradigms whose
+        # options widget needs a sport-file default — e.g. home advantage
+        # magnitude — can read it from self.opt instead of guessing
+        p = XkorParadigmFactory.newParadigmForSport(s, self.currentParadigmOptions)
 
         if s.name() != "" and p.hasOptionsWidget():
             self.paradigmOptionsWidget = p.newOptionsWidget(self.currentParadigmOptions)
