@@ -11,6 +11,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+docs = ["mkdocs-material>=9"]
 
 [project.gui-scripts]
 xkoranate = "xkoranate.main:main"
