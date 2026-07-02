@@ -78,6 +78,31 @@ class XkorRoundRobinCompetition(XkorAbstractCompetition):
 
         return fixtures
 
+    def schedule(self):
+        groupSize = self.largestGroupSize(self.startList)
+        if groupSize == 0:
+            return ""
+
+        matchdayNames = self.matchdayNames()
+        lines = []
+        for matchday in range(self.matchdays()):
+            fixtures = self.generateFixtures(matchday, groupSize)
+            matchdayLines = []
+            for i in self.startList.groups:
+                size = len(i.athletes)
+                pairs = [(h, a) for h, a in fixtures if h < size and a < size]
+                if not pairs:
+                    continue
+                if len(self.startList.groups) > 1:
+                    matchdayLines.append(i.name)
+                for home, away in pairs:
+                    matchdayLines.append(self._formatFixture(i.athletes[home], i.athletes[away]))
+            if matchdayLines:
+                lines.append(matchdayNames[matchday])
+                lines.extend(matchdayLines)
+                lines.append("")
+        return "\n".join(lines).rstrip("\n") + "\n"
+
     def generateTableColumns(self, groupName):
         from xkoranate.tablegenerator.tablecolumn import XkorTableColumn
 

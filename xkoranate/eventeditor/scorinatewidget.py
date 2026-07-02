@@ -101,11 +101,16 @@ class XkorScorinateWidget(QWidget):
         self.exportResultsAction.setEnabled(False)
         self.exportResultsAction.triggered.connect(lambda: self.exportResults())
 
+        self.scheduleAction = icon_action("schedule", "View full schedule", self)
+        self.scheduleAction.setEnabled(False)
+        self.scheduleAction.triggered.connect(self.viewSchedule)
+
         # toolbar
         toolBar = QToolBar()
         small = self.style().pixelMetric(QStyle.PM_SmallIconSize)
         toolBar.setIconSize(QSize(small, small))
         toolBar.addAction(self.scorinateAction)
+        toolBar.addAction(self.scheduleAction)
         toolBar.addAction(self.exportResultsAction)
 
         self.matchday = QComboBox()
@@ -139,6 +144,7 @@ class XkorScorinateWidget(QWidget):
         self.textedit.setPlainText("")
         self.matchday.clear()
         self.matchday.hide()
+        self.scheduleAction.setEnabled(False)
 
     def exportResults(self, filename=None):
         # C++ overloads: exportResults() shows the dialog; exportResults(QString) writes
@@ -253,6 +259,8 @@ class XkorScorinateWidget(QWidget):
         else:
             self.matchday.show()
 
+        self.scheduleAction.setEnabled(self.c.schedule() is not None)
+
         self.lastMatchday = -1
         for i in range(len(matchdayNames)):
             if self.c.results(i) != "":
@@ -276,6 +284,13 @@ class XkorScorinateWidget(QWidget):
 
     def updateResults(self, matchday):
         self.textedit.setPlainText(self._formatResults(self.c.results(matchday)))
+
+    def viewSchedule(self):
+        schedule = self.c.schedule() if self.c is not None else None
+        if schedule is None:
+            return
+        self.textedit.setPlainText(self._formatResults(schedule))
+        self.exportResultsAction.setEnabled(True)
 
     def _formatResults(self, text):
         if self.bbcodeCheckBox.isChecked() and text != "":
