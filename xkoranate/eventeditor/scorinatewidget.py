@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QDialog, QDialogButtonBox,
                                QFileDialog, QMessageBox, QPlainTextEdit, QStyle,
                                QToolBar, QVBoxLayout, QWidget)
 
+from ..bbcode import boldWinners
 from ..event import XkorEvent
 from ..icons import icon_action
 from ..rng import Mt19937
@@ -120,7 +121,7 @@ class XkorScorinateWidget(QWidget):
         self.matchday.currentIndexChanged.connect(self.updateButtons)
         self.matchday.currentIndexChanged.connect(self.updateResults)
 
-        self.bbcodeCheckBox = QCheckBox("BBCode output ([pre] tags)")
+        self.bbcodeCheckBox = QCheckBox("BBCode output ([pre] tags, bold winners)")
         self.bbcodeCheckBox.toggled.connect(lambda: self.updateResults(self.matchday.currentIndex()))
 
         self.textedit = QPlainTextEdit()
@@ -318,5 +319,5 @@ class XkorScorinateWidget(QWidget):
 
     def _formatResults(self, text):
         if self.bbcodeCheckBox.isChecked() and text != "":
-            return "[pre]%s[/pre]" % text
+            return "[pre]%s[/pre]" % boldWinners(text)
         return text
