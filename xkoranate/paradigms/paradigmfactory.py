@@ -8,6 +8,7 @@ from .golfinatorparadigm import XkorGolfinatorParadigm
 from .h2hparadigm import XkorH2HParadigm
 from .highjumpparadigm import XkorHighJumpParadigm
 from .howzzatparadigm import XkorHowzzatParadigm
+from .lisaparadigm import XkorLISAParadigm
 from .nsfsparadigm import XkorNSFSParadigm
 from .nsfsbaseballparadigm import XkorNSFSBaseballParadigm
 from .nsfsgridironparadigm import XkorNSFSGridironParadigm
@@ -45,6 +46,8 @@ class XkorParadigmFactory:
             rval = XkorHighJumpParadigm()
         elif type == "howzzat":
             rval = XkorHowzzatParadigm()
+        elif type == "lisa":
+            rval = XkorLISAParadigm()
         elif type == "nsfs":
             rval = XkorNSFSParadigm()
         elif type == "nsfs-baseball":

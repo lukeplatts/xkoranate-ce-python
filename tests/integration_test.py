@@ -27,6 +27,7 @@ SCORINATE_CASES = [
     ("Badminton—xkoranate formula", "matches"),
     ("Association football—SQIS formula", "roundRobin"),
     ("Association football—Footba11er formula", "matches"),
+    ("Association football—LISA formula", "roundRobin"),
 ]
 
 
