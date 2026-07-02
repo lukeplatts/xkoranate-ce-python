@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sport version="0.3">
+	<name>Association football—LISA formula</name>
+	<discipline>Association football</discipline>
+	<event>LISA formula</event>
+	<scorinator /> <!-- only one scorinator is needed for this event -->
+
+	<paradigm>lisa</paradigm>
+	<paradigmOptions>
+		<!-- LISA constants: https://forum.nationstates.net/viewtopic.php?p=42898867#p42898867 -->
+		<!-- and the v1.093 update: https://forum.nationstates.net/viewtopic.php?p=43251481#p43251481 -->
+		<double type="powerScalar">1.984</double>
+		<double type="refRank">10.93</double>
+		<double type="REAR">300</double>
+		<double type="marginDivisor">750</double>
+		<double type="homeAdvantageEAR">100</double>
+		<list type="tiebreakers">
+			<string>extratime</string>
+			<string>shootout</string>
+		</list>
+		<list type="tiebreakerNames">
+			<string>AET</string>
+			<string>pen.</string>
+		</list>
+		<string type="tableHeaderGoalsFor">GF</string>
+		<string type="tableHeaderGoalsAgainst">GA</string>
+		<string type="tableHeaderGoalDifference">GD</string>
+	</paradigmOptions>
+
+	<dataPoints name="style">
+		<dataPoint pos="0">-5</dataPoint>
+		<dataPoint pos="1">5</dataPoint>
+	</dataPoints>
+</sport>
