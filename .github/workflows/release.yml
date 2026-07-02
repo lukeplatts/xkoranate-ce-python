@@ -36,6 +36,24 @@ jobs:
       - name: Build xkoranate.app
         run: ./build_app.sh
 
+      - name: Verify app actually launches
+        # A bundle existing doesn't mean it opens — a missing Info.plist key,
+        # a data file collected under the wrong Resources path, etc. would
+        # still produce a valid bundle that crashes on first launch, which
+        # this would ship without catching.
+        run: |
+          "dist/xkoranate.app/Contents/MacOS/xkoranate" &
+          pid=$!
+          sleep 5
+          if ! kill -0 "$pid" 2>/dev/null; then
+            echo "::error::xkoranate.app exited before the launch check completed"
+            wait "$pid" || true
+            exit 1
+          fi
+          kill "$pid"
+          wait "$pid" 2>/dev/null || true
+          echo "xkoranate.app launched and stayed running"
+
       - name: Zip app bundle (preserving bundle structure/permissions)
         run: |
           cd dist
@@ -69,6 +87,20 @@ jobs:
 
       - name: Build xkoranate.exe
         run: .\build_app.bat
+
+      - name: Verify exe actually launches
+        # The exe existing doesn't mean it opens — a missing bundled DLL or
+        # data file would still produce a valid exe that crashes on first
+        # run, which this would ship without catching.
+        run: |
+          $proc = Start-Process -FilePath "dist\xkoranate\xkoranate.exe" -PassThru
+          Start-Sleep -Seconds 5
+          if ($proc.HasExited) {
+            Write-Error "xkoranate.exe exited before the launch check completed"
+            exit 1
+          }
+          Stop-Process -Id $proc.Id -Force
+          Write-Host "xkoranate.exe launched and stayed running"
 
       - name: Zip app folder
         run: Compress-Archive -Path dist\xkoranate -DestinationPath "xkoranate-${{ steps.version.outputs.version }}-windows.zip"

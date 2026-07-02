@@ -74,6 +74,23 @@ jobs:
           test -d dist/xkoranate.app
           test -x "dist/xkoranate.app/Contents/MacOS/xkoranate"
 
+      - name: Verify app actually launches
+        # A bundle existing doesn't mean it opens — a missing Info.plist key,
+        # a data file collected under the wrong Resources path, etc. would
+        # all still pass the check above but crash on first launch.
+        run: |
+          "dist/xkoranate.app/Contents/MacOS/xkoranate" &
+          pid=$!
+          sleep 5
+          if ! kill -0 "$pid" 2>/dev/null; then
+            echo "::error::xkoranate.app exited before the launch check completed"
+            wait "$pid" || true
+            exit 1
+          fi
+          kill "$pid"
+          wait "$pid" 2>/dev/null || true
+          echo "xkoranate.app launched and stayed running"
+
   build-windows-app:
     name: Build Windows app
     runs-on: windows-latest
@@ -96,6 +113,19 @@ jobs:
       - name: Verify exe was produced
         run: |
           if (-not (Test-Path "dist\xkoranate\xkoranate.exe")) { exit 1 }
+
+      - name: Verify exe actually launches
+        # The exe existing doesn't mean it opens — a missing bundled DLL or
+        # data file would still pass the check above but crash on first run.
+        run: |
+          $proc = Start-Process -FilePath "dist\xkoranate\xkoranate.exe" -PassThru
+          Start-Sleep -Seconds 5
+          if ($proc.HasExited) {
+            Write-Error "xkoranate.exe exited before the launch check completed"
+            exit 1
+          }
+          Stop-Process -Id $proc.Id -Force
+          Write-Host "xkoranate.exe launched and stayed running"
 
   build-linux-app:
     name: Build Linux app
