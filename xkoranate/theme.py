@@ -14,7 +14,7 @@ from PySide6.QtCore import QObject, QSettings, Signal
 # fixed in all modes — deliberately not qdarktheme's default blue. Used for
 # fills/indicators (buttons, toggle switch, radio/checkbox) where contrast is
 # checked against an adjacent colour, not for literal text on a page.
-ACCENT = "#8EC23A"
+ACCENT = "#8EC23A" # Mertagnian Green ;)
 
 MODES = ["light", "dark", "oled"]
 MODE_LABELS = {"light": "Light", "dark": "Dark", "oled": "True Dark (OLED)"}
