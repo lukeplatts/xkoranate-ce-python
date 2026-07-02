@@ -20,11 +20,17 @@ class XkorFootba11erParadigm(XkorAbstractH2HParadigm):
 
     # protected:
 
+    def homeAdvantageMagnitude(self):
+        # the sport file provides a default magnitude; the options widget
+        # lets the user override it per-event
+        default = toDouble(self.opt.get("homeAdvantage", 0.065))
+        return toDouble(self.userOpt.get("homeAdvantageMagnitude", default))
+
     def generateFTScore(self, home, away):
         # get the parameters
         homeAdvantage = 0
         if toString(self.userOpt.get("homeAdvantage")) == "true":
-            homeAdvantage = toDouble(self.opt.get("homeAdvantage", 0.065))
+            homeAdvantage = self.homeAdvantageMagnitude()
         skillCoeff = toDouble(self.opt.get("skillCoeff", 0.6))
         skillOffset = toDouble(self.opt.get("skillOffset", 0.2))
         listAttackStyle = (toString(self.opt.get("attackStyle", "list")) == "list")
@@ -123,7 +129,7 @@ class XkorFootba11erParadigm(XkorAbstractH2HParadigm):
         # get the parameters
         homeAdvantage = 0
         if toString(self.userOpt.get("homeAdvantage")) == "true":
-            homeAdvantage = toDouble(self.opt.get("homeAdvantage", 0.065))
+            homeAdvantage = self.homeAdvantageMagnitude()
         skillCoeff = toDouble(self.opt.get("skillCoeff", 0.6))
         skillOffset = toDouble(self.opt.get("skillOffset", 0.2))
         pointValues = toList(self.opt.get("pointValues", [1]))
