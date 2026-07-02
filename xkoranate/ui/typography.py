@@ -27,7 +27,7 @@ def apply_heading(label, level=1, accent=False):
     font.setWeight(weight)
     label.setFont(font)
     if accent:
-        label.setStyleSheet("color: %s;" % theme.ACCENT)
+        label.setStyleSheet("color: %s;" % theme.accent_text())
     return label
 
 

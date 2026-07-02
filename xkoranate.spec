@@ -3,11 +3,11 @@
 
 from PyInstaller.utils.hooks import collect_all
 
-# qt-material (theme .xml/.css.template + fonts) and qtawesome (icon fonts +
+# qdarktheme (stylesheet templates + svg icons) and qtawesome (icon fonts +
 # charmaps) load data files at runtime — collect them or the frozen app crashes
 # at startup even though the dev run works.
 _datas, _binaries, _hiddenimports = [], [], []
-for _pkg in ("qt_material", "qtawesome"):
+for _pkg in ("qdarktheme", "qtawesome"):
     d, b, h = collect_all(_pkg)
     _datas += d
     _binaries += b
@@ -32,8 +32,12 @@ a = Analysis(
         "PySide6.QtPositioning", "PySide6.QtLocation", "PySide6.QtBluetooth",
         "PySide6.QtSensors", "PySide6.QtSerialPort", "PySide6.QtSql",
         "PySide6.QtTest", "PySide6.QtDesigner", "PySide6.QtHelp",
-        "PySide6.QtOpenGL", "PySide6.QtOpenGLWidgets", "PySide6.QtSvg",
-        "PySide6.QtSvgWidgets", "PySide6.QtUiTools", "PySide6.QtXml",
+        # NOTE: QtSvg/QtSvgWidgets are *not* excluded — qdarktheme's icon
+        # engine imports PySide6.QtSvg internally at runtime (qt-material,
+        # the previous theme dependency, didn't need it), so excluding them
+        # crashes the frozen app on launch even though the dev run is fine.
+        "PySide6.QtOpenGL", "PySide6.QtOpenGLWidgets",
+        "PySide6.QtUiTools", "PySide6.QtXml",
         "PySide6.QtNetwork", "PySide6.QtDBus", "PySide6.QtConcurrent",
         "PySide6.QtPrintSupport", "PySide6.QtWebSockets", "PySide6.QtRemoteObjects",
         "PySide6.QtScxml", "PySide6.QtStateMachine", "PySide6.QtTextToSpeech",
@@ -77,7 +81,8 @@ app = BUNDLE(
         "CFBundleDisplayName": "xkoranate",
         "CFBundleShortVersionString": "0.4.0",
         "NSHighResolutionCapable": True,
-        # the original xkoranate UI is light-themed; opt out of dark mode
-        "NSRequiresAquaSystemAppearance": True,
+        # the app now ships its own light/dark toggle, so let macOS switch
+        # window chrome (title bar) freely instead of forcing Aqua
+        "NSRequiresAquaSystemAppearance": False,
     },
 )

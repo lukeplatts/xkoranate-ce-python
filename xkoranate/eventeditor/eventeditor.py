@@ -8,6 +8,7 @@ from ..signuplist import XkorSignupList
 from ..signuplisteditor.signuplisteditor import XkorSignupListEditor
 from ..sport import XkorSport
 from .. import theme
+from ..ui.dialogs import text_preview_dialog
 from .competitionselector import XkorCompetitionSelector
 from .eventsetupwidget import XkorEventSetupWidget
 from .scorinatewidget import (XkorScorinateWidget, _cloneEvent, _cloneRPList,
@@ -24,6 +25,7 @@ class XkorEventEditor(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.selectionModel = None
         self.stack = None
         self.signupListEditor = None
@@ -41,6 +43,10 @@ class XkorEventEditor(QWidget):
         self.initEventSetupWidget()
 
         self.initLayout()
+
+        # theme.MUTED differs between light/dark; the breadcrumb bakes it into
+        # rich-text HTML, so it needs an explicit repaint on toggle
+        theme.signal.changed.connect(self.updateStepIndicator)
 
     def goNext(self):
         self.prev.setDisabled(False)
@@ -70,12 +76,12 @@ class XkorEventEditor(QWidget):
             if i == active:
                 parts.append(
                     '<span style="color:%s; font-weight:600;">%d&nbsp;%s</span>'
-                    % (theme.ACCENT, i + 1, name))
+                    % (theme.accent_text(), i + 1, name))
             else:
                 parts.append(
                     '<span style="color:%s;">%d&nbsp;%s</span>'
-                    % (theme.MUTED, i + 1, name))
-        sep = '<span style="color:%s;">&nbsp;&nbsp;›&nbsp;&nbsp;</span>' % theme.MUTED
+                    % (theme.muted(), i + 1, name))
+        sep = '<span style="color:%s;">&nbsp;&nbsp;›&nbsp;&nbsp;</span>' % theme.muted()
         self.stepIndicator.setText(sep.join(parts))
 
     def initCompetitionSelector(self):
@@ -86,6 +92,7 @@ class XkorEventEditor(QWidget):
     def initEventSetupWidget(self):
         self.eventSetupWidget = XkorEventSetupWidget()
         self.eventSetupWidget.listChanged.connect(self.setDataChanged)
+        self.eventSetupWidget.viewScheduleRequested.connect(self.viewSchedule)
         self.signupListEditor.itemDeleted.connect(self.eventSetupWidget.deleteAthlete)
 
     def initLayout(self):
@@ -110,7 +117,8 @@ class XkorEventEditor(QWidget):
         self.prev.clicked.connect(self.goPrev)
         self.next = QPushButton("Continue")
         self.next.setDisabled(True)
-        self.next.setProperty("class", "primary")  # qt-material accent button
+        self.next.setStyleSheet(theme.primary_button_qss())
+        theme.signal.changed.connect(lambda: self.next.setStyleSheet(theme.primary_button_qss()))
         self.next.clicked.connect(self.goNext)
 
         # main layout
@@ -242,3 +250,17 @@ class XkorEventEditor(QWidget):
 
     def updateSportList(self):
         self.sportSelector.updateSportList()
+
+    def viewSchedule(self):
+        from ..competitions.competitionfactory import XkorCompetitionFactory
+
+        self.updateData()
+        startList = self.m_data.makeStartList(self.m_rpList)
+        competition = XkorCompetitionFactory.newCompetitionFull(
+            self.m_data.competition(), startList, self.sport,
+            self.m_data.paradigmOptions(), self.m_data.competitionOptions(), {})
+
+        schedule = competition.schedule()
+        if schedule is None:
+            schedule = "This competition type doesn't have a fixed schedule to preview."
+        text_preview_dialog(self, "Full schedule", schedule)

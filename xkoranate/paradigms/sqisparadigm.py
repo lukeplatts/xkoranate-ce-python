@@ -13,7 +13,15 @@ class XkorSQISParadigm(XkorAbstractH2HParadigm):
 
     def newOptionsWidget(self, paradigmOptions):
         from .options.sqisparadigmoptions import XkorSQISParadigmOptions
-        return XkorSQISParadigmOptions(paradigmOptions)
+        return XkorSQISParadigmOptions(paradigmOptions, self._defaultHomeAdvantageMagnitude())
+
+    def _defaultHomeAdvantageMagnitude(self):
+        return toDouble(self.opt.get("homeAdvantage", 4.0 / 3.0))
+
+    def homeAdvantageMagnitude(self):
+        # the sport file provides a default magnitude; the options widget
+        # lets the user override it per-event
+        return toDouble(self.userOpt.get("homeAdvantageMagnitude", self._defaultHomeAdvantageMagnitude()))
 
     # protected:
 
@@ -24,7 +32,7 @@ class XkorSQISParadigm(XkorAbstractH2HParadigm):
 
         a = toDouble(self.opt.get("constantA"))
         b = toDouble(self.opt.get("constantB"))
-        homeAdvValue = (toDouble(self.opt.get("homeAdvantage")) if homeAdvantage else 1)
+        homeAdvValue = (self.homeAdvantageMagnitude() if homeAdvantage else 1)
 
         # calculate P(goal) on any given attack
         pGoal = (a + (b - (1 if skill == oppSkill else min(skill, oppSkill) / max(skill, oppSkill)) * b)

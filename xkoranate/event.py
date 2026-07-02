@@ -62,7 +62,7 @@ class XkorEvent:
             rval.groups.append(currentGroup)
 
         # now scale back the bonuses if any are too high in WG style
-        if rpList.useWGStyleBonus() and maxRPSkill > 1:
+        if rpList is not None and rpList.useWGStyleBonus() and maxRPSkill > 1:
             for i in rval.groups:
                 for j in i.athletes:
                     j.rpSkill /= maxRPSkill
