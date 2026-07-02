@@ -1,9 +1,8 @@
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (QDoubleSpinBox, QFormLayout, QLabel,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QDoubleSpinBox, QFormLayout, QVBoxLayout, QWidget)
 
 from ..signuplist import XkorSignupList
+from ..ui.typography import heading_label
 
 
 def _cloneSignupList(sl):
@@ -22,15 +21,13 @@ class XkorSignupListEditor(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.isLoading = False
 
         self.athletes = None
         self.m_data = XkorSignupList()
 
-        headingFont = QFont()
-        headingFont.setWeight(QFont.Bold)
-        label = QLabel("Set participants")
-        label.setFont(headingFont)
+        label = heading_label("Set participants", level=1, center=True)
 
         # minimum rank
         self.minRank = QDoubleSpinBox()

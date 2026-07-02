@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QComboBox, QGridLayout, QLabel, QWidget
+from PySide6.QtWidgets import QComboBox, QGridLayout, QWidget
 
+from ..ui.typography import heading_label
 from ..variant import toString
 
 
@@ -11,6 +11,7 @@ class XkorCompetitionSelector(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setAttribute(Qt.WA_StyledBackground, True)
         self.optionsWidget = None
         self.currentOptions = {}
 
@@ -18,12 +19,8 @@ class XkorCompetitionSelector(QWidget):
         self.comboBox.setInsertPolicy(QComboBox.InsertAlphabetically)
         self.comboBox.currentIndexChanged.connect(self.updateCompetition)
 
-        headingFont = QFont()
-        headingFont.setWeight(QFont.Bold)
-
         self.layout = QGridLayout(self)
-        label = QLabel("Choose competition type")
-        label.setFont(headingFont)
+        label = heading_label("Choose competition type", level=1, center=True)
         self.layout.addWidget(label, 0, 0, Qt.AlignCenter)
         self.layout.addWidget(self.comboBox, 1, 0, Qt.AlignTop | Qt.AlignHCenter)
         self.layout.setRowStretch(0, 0)

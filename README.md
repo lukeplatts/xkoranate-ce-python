@@ -11,11 +11,14 @@ It simulates results for one hundred–plus disciplines across sixty-plus sports
 mass starts, head-to-head matches, round robins, multi-run events, shooting and
 archery formats, and includes the league table generator.
 
+The interface has a modern, light Material-style theme (via `qt-material`) with
+Material Design Icons (`qtawesome`); the underlying behaviour is unchanged.
+
 ## Running from source
 
 ```sh
 python3 -m venv .venv
-.venv/bin/pip install PySide6
+.venv/bin/pip install PySide6 qt-material qtawesome
 .venv/bin/python -m xkoranate
 ```
 
@@ -28,7 +31,12 @@ python3 -m venv .venv
 
 The app bundles the `sports/` definitions directory into
 `xkoranate.app/Contents/Resources/sports/`, same as the original Mac build.
-Sport parameter files are plain XML and remain user-editable there.
+Sport parameter files are plain XML and remain user-editable there. The
+PyInstaller spec also bundles the `qt-material` and `qtawesome` data files so
+the theme and icons work in the frozen app.
+
+See [ROADMAP.md](ROADMAP.md) for a prioritized list of upstream issues and a
+Windows-support feasibility plan.
 
 ## Project layout
 
