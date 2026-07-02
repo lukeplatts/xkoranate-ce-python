@@ -1,15 +1,17 @@
 import uuid
 
 from PySide6.QtCore import QItemSelectionModel, QSize, Qt, Signal
-from PySide6.QtGui import QAction, QFont
-from PySide6.QtWidgets import (QAbstractItemView, QGridLayout, QLabel, QStyle,
-                               QToolBar, QTreeWidgetItem, QTreeWidgetItemIterator)
+from PySide6.QtWidgets import (QAbstractItemView, QGridLayout, QLabel, QStackedLayout,
+                               QStyle, QToolBar, QTreeWidgetItem, QTreeWidgetItemIterator,
+                               QWidget)
 
 from ..abstracttreewidget import XkorAbstractTreeWidget
+from ..ui.typography import heading_label
+from .. import theme
 from ..athlete import XkorAthlete
 from ..exceptions import XkorSearchFailedException
 from ..group import XkorGroup
-from ..icons import icon
+from ..icons import icon_action
 from ..rng import Mt19937
 from ..signuplist import XkorSignupList
 from .eventsetupdelegate import XkorEventSetupDelegate
@@ -56,18 +58,18 @@ class XkorEventSetupWidget(XkorAbstractTreeWidget):
         rootItem.setFlags(rootItem.flags() & ~Qt.ItemIsDropEnabled)
 
         # set up actions
-        self.insertGroupAction = QAction(icon("add"), "Create a group", self)
+        self.insertGroupAction = icon_action("add", "Create a group", self)
         self.insertGroupAction.triggered.connect(self.insertItem)
 
-        self.insertAthleteAction = QAction(icon("add-participant"), "Add a participant", self)
+        self.insertAthleteAction = icon_action("add-participant", "Add a participant", self)
         self.insertAthleteAction.setEnabled(False)
         self.insertAthleteAction.triggered.connect(self.insertAthlete)
 
-        self.insertAllAction = QAction(icon("add-all-participants"), "Add all available participants", self)
+        self.insertAllAction = icon_action("add-all-participants", "Add all available participants", self)
         self.insertAllAction.setEnabled(False)
         self.insertAllAction.triggered.connect(self.insertAll)
 
-        self.randomizeAction = QAction(icon("roll"), "Randomize this group", self)
+        self.randomizeAction = icon_action("roll", "Randomize this group", self)
         self.randomizeAction.setEnabled(False)
         self.randomizeAction.triggered.connect(self.randomizeGroup)
 
@@ -76,6 +78,9 @@ class XkorEventSetupWidget(XkorAbstractTreeWidget):
         self.setupLayout(actions)
 
         self.slChanged.connect(self.updateAvailableAthletes)
+
+    def insertionText(self):
+        return "Create a group"
 
     def createAthlete(self, parent):
         item = QTreeWidgetItem(parent)
@@ -197,10 +202,7 @@ class XkorEventSetupWidget(XkorAbstractTreeWidget):
 
     def setupLayout(self, actions):
         # label
-        headingFont = QFont()
-        headingFont.setWeight(QFont.Bold)
-        label = QLabel("Set up groups")
-        label.setFont(headingFont)
+        label = heading_label("Set up groups", level=1, center=True)
 
         # tool bar
         toolBar = QToolBar()
@@ -212,11 +214,28 @@ class XkorEventSetupWidget(XkorAbstractTreeWidget):
             else:
                 toolBar.addAction(i)
 
+        # empty-state hint, layered over the tree so a first-time user isn't
+        # left staring at a blank rectangle
+        self._emptyLabel = QLabel(self.emptyStateText())
+        self._emptyLabel.setAlignment(Qt.AlignCenter)
+        self._emptyLabel.setWordWrap(True)
+        self._emptyLabel.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self._restyleEmptyLabel()
+        theme.signal.changed.connect(self._restyleEmptyLabel)
+
+        treeArea = QWidget()
+        treeStack = QStackedLayout(treeArea)
+        treeStack.setStackingMode(QStackedLayout.StackAll)
+        treeStack.addWidget(self.treeWidget)
+        treeStack.addWidget(self._emptyLabel)
+
         self.layout = QGridLayout(self)
         self.layout.addWidget(label, 0, 0, Qt.AlignCenter)
-        self.layout.addWidget(self.treeWidget, 1, 0)
+        self.layout.addWidget(treeArea, 1, 0)
         self.layout.addWidget(toolBar, 2, 0, Qt.AlignCenter)
         self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.updateEmptyState()
 
     def updateButtons(self):
         selection = self.treeWidget.selectedItems()

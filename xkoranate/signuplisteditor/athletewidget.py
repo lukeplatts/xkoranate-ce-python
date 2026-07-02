@@ -2,12 +2,12 @@ import time
 import uuid
 
 from PySide6.QtCore import QDir, Qt
-from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (QFileDialog, QHeaderView, QTreeWidgetItem,
                                QTreeWidgetItemIterator)
 
 from ..athlete import XkorAthlete
-from ..icons import icon
+from ..icons import icon_action
+from ..ui.fonts import column_width_for
 from ..variant import qNumber, toDouble, toString
 from .abstractathletewidget import (XkorAbstractAthleteWidget, _indexOf,
                                     _uuidFromString, _uuidToString)
@@ -37,11 +37,11 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
         for i in range(len(self.m_columnTypes)):
             if self.m_columnTypes[i] in ("double", "golfStyle", "skill"):
                 self.treeWidget.header().setSectionResizeMode(i, QHeaderView.Fixed)
-                self.treeWidget.header().resizeSection(i, 80)
+                self.treeWidget.header().resizeSection(i, column_width_for(self.treeWidget, "8888.88"))
             else:
                 self.treeWidget.header().setSectionResizeMode(i, QHeaderView.Stretch)
 
-        self.importAction = QAction(icon("document-import"), "Import from text file", self)
+        self.importAction = icon_action("document-import", "Import from text file", self)
         self.importAction.setEnabled(True)
         self.importAction.triggered.connect(lambda: self.importAthletes())
 

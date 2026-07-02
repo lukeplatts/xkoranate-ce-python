@@ -2,6 +2,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (QFormLayout, QGridLayout, QHeaderView, QSpinBox,
                                QStyle, QToolBar, QTreeWidgetItemIterator)
 
+from ...ui.fonts import column_width_for
 from ...variant import qNumber, toDouble, toInt
 from ..abstractrpbonuswidget import XkorAbstractRPBonusWidget
 from .wc36rpbonusdelegate import XkorWC36RPBonusDelegate
@@ -24,12 +25,12 @@ class XkorWC36RPBonusWidget(XkorAbstractRPBonusWidget):
         self.treeWidget.sortItems(0, Qt.AscendingOrder)
         self.setUseTeamBonus()
 
-        # set the column widths
+        # set the column widths — "Exceptional" is the widest level label
         self.treeWidget.header().setSectionResizeMode(0, QHeaderView.Stretch)
         self.treeWidget.header().setSectionResizeMode(1, QHeaderView.Fixed)
-        self.treeWidget.header().resizeSection(1, 150)
+        self.treeWidget.header().resizeSection(1, column_width_for(self.treeWidget, "Exceptional"))
         self.treeWidget.header().setSectionResizeMode(2, QHeaderView.Fixed)
-        self.treeWidget.header().resizeSection(2, 100)
+        self.treeWidget.header().resizeSection(2, column_width_for(self.treeWidget, "8888.88"))
 
         self.setupLayout()
 
