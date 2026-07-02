@@ -17,6 +17,19 @@ class XkorMatchesCompetition(XkorAbstractCompetition):
 
         return XkorMatchesCompetitionOptions(competitionOptions)
 
+    def schedule(self):
+        lines = []
+        for i in self.startList.groups:
+            size = len(i.athletes) - (len(i.athletes) % 2)
+            if size == 0:
+                continue
+            if len(self.startList.groups) > 1:
+                lines.append(i.name)
+            for home in range(0, size, 2):
+                lines.append(self._formatFixture(i.athletes[home], i.athletes[home + 1]))
+            lines.append("")
+        return "\n".join(lines).rstrip("\n") + "\n"
+
     def scorinate(self, matchday):
         from xkoranate.paradigms.paradigmfactory import XkorParadigmFactory
 
