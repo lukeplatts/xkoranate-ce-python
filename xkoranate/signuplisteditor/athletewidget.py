@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QFileDialog, QHeaderView, QTreeWidgetItemIterator
 
 from ..athlete import XkorAthlete
 from ..icons import icon_action
+from ..ui.dialogs import resolved_search_path
 from ..ui.fonts import column_width_for
 from ..variant import qNumber, toDouble, toString
 from .abstractathletewidget import (_AthleteTreeWidgetItem,
@@ -82,7 +83,7 @@ class XkorAthleteWidget(XkorAbstractAthleteWidget):
             self.dialog.setWindowModality(Qt.WindowModal)
             self.dialog.setAcceptMode(QFileDialog.AcceptOpen)
 
-            self.dialog.setDirectory("signupLists:/")
+            self.dialog.setDirectory(resolved_search_path("signupLists"))
             self.dialog.fileSelected.connect(self.importAthletes)
             self.dialog.open()
             return
