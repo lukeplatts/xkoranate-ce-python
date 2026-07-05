@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QFileDialog, QFormLayout,
                                QGridLayout, QLabel, QMessageBox,
                                QPlainTextEdit, QSpinBox, QWidget)
 
-from ..ui.dialogs import message_box
+from ..ui.dialogs import message_box, resolved_search_path
 from ..ui.fonts import monospace_font
 from ..variant import toDouble, toString
 from .sortcriteriawidget import XkorSortCriteriaWidget
@@ -45,13 +45,13 @@ class XkorTableGenerator(QWidget):
         self.fileModified = False
         self.matchesModified = False
 
-        self.dialog = QFileDialog(self, "Save table file", "tables:/",
+        self.dialog = QFileDialog(self, "Save table file", resolved_search_path("tables"),
                                   "XML files (*.xml)")
         self.dialog.setWindowModality(Qt.WindowModal)
         self.dialog.setDefaultSuffix("xml")
 
         self.importDialog = QFileDialog(self, "Import results file",
-                                        "resultsImport:/", "Text files (*.txt)")
+                                        resolved_search_path("resultsImport"), "Text files (*.txt)")
         self.importDialog.setWindowModality(Qt.WindowModal)
         self.importDialog.setAcceptMode(QFileDialog.AcceptOpen)
 
@@ -226,7 +226,7 @@ class XkorTableGenerator(QWidget):
 
     def importResults(self, filename=None):
         if filename is None:
-            self.importDialog.setDirectory("resultsImport:/")
+            self.importDialog.setDirectory(resolved_search_path("resultsImport"))
             self._openDialog(self.importDialog, self.importResults)
             return
 
@@ -250,7 +250,7 @@ class XkorTableGenerator(QWidget):
         if filename is None:
             if self.okayToLoad():
                 self.dialog.setAcceptMode(QFileDialog.AcceptOpen)
-                self.dialog.setDirectory("tables:/")
+                self.dialog.setDirectory(resolved_search_path("tables"))
                 self._openDialog(self.dialog, self.openFile)
             return
 
@@ -328,7 +328,7 @@ class XkorTableGenerator(QWidget):
 
     def saveFileAs(self):
         self.dialog.setAcceptMode(QFileDialog.AcceptSave)
-        self.dialog.setDirectory("tables:/")
+        self.dialog.setDirectory(resolved_search_path("tables"))
         self._openDialog(self.dialog, self.saveFile)
 
     def setFileModified(self, isEdited=True):
