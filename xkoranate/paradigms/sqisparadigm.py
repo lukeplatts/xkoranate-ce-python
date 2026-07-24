@@ -11,6 +11,12 @@ class XkorSQISParadigm(XkorAbstractH2HParadigm):
     def hasOptionsWidget(self):
         return True
 
+    def usesMaxSkill(self):
+        # generateScore() below only ever compares min(skill,oppSkill) /
+        # max(skill,oppSkill) between the two specific competitors, which is
+        # invariant to any common rescale of the whole population
+        return False
+
     def newOptionsWidget(self, paradigmOptions):
         from .options.sqisparadigmoptions import XkorSQISParadigmOptions
         return XkorSQISParadigmOptions(

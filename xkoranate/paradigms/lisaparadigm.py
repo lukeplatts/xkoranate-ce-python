@@ -25,6 +25,15 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
     def hasOptionsWidget(self):
         return True
 
+    def usesMaxSkill(self):
+        # _ear() below takes rank as a raw, un-normalized value (see its
+        # docstring) and calibrates entirely via refRank/REAR/powerScalar,
+        # not via the signup list's generic min/max bounds
+        return False
+
+    def usesMinSkill(self):
+        return False
+
     def newOptionsWidget(self, paradigmOptions):
         from .options.lisaparadigmoptions import XkorLISAParadigmOptions
         return XkorLISAParadigmOptions(
