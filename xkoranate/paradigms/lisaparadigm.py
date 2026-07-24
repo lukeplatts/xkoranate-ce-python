@@ -25,25 +25,65 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
     def hasOptionsWidget(self):
         return True
 
+    def usesMaxSkill(self):
+        # _ear() below takes rank as a raw, un-normalized value (see its
+        # docstring) and calibrates entirely via refRank/REAR/powerScalar,
+        # not via the signup list's generic min/max bounds
+        return False
+
+    def usesMinSkill(self):
+        return False
+
     def newOptionsWidget(self, paradigmOptions):
         from .options.lisaparadigmoptions import XkorLISAParadigmOptions
-        return XkorLISAParadigmOptions(paradigmOptions, self._defaultHomeAdvantageEAR())
+        return XkorLISAParadigmOptions(
+            paradigmOptions,
+            self._defaultHomeAdvantageEAR(),
+            self._defaultPowerScalar(),
+            self._defaultRefRank(),
+            self._defaultREAR(),
+            self._defaultMarginDivisor(),
+        )
 
     def _defaultHomeAdvantageEAR(self):
         return toDouble(self.opt.get("homeAdvantageEAR", 100))
+
+    def _defaultPowerScalar(self):
+        return toDouble(self.opt.get("powerScalar", 1.984))
+
+    def _defaultRefRank(self):
+        return toDouble(self.opt.get("refRank", 10.93))
+
+    def _defaultREAR(self):
+        return toDouble(self.opt.get("REAR", 300))
+
+    def _defaultMarginDivisor(self):
+        return toDouble(self.opt.get("marginDivisor", 750))
 
     def homeAdvantageEAR(self):
         # the sport file provides a default magnitude; the options widget
         # lets the user override it per-event
         return toDouble(self.userOpt.get("homeAdvantageEAR", self._defaultHomeAdvantageEAR()))
 
+    def powerScalar(self):
+        return toDouble(self.userOpt.get("powerScalar", self._defaultPowerScalar()))
+
+    def refRank(self):
+        return toDouble(self.userOpt.get("refRank", self._defaultRefRank()))
+
+    def REAR(self):
+        return toDouble(self.userOpt.get("REAR", self._defaultREAR()))
+
+    def marginDivisor(self):
+        return toDouble(self.userOpt.get("marginDivisor", self._defaultMarginDivisor()))
+
     # protected: LISA math helpers
 
     def _ear(self, rank):
         """Rank -> Elo Above Replacement."""
-        powerScalar = toDouble(self.opt.get("powerScalar", 1.984))
-        refRank = toDouble(self.opt.get("refRank", 10.93))
-        rear = toDouble(self.opt.get("REAR", 300))
+        powerScalar = self.powerScalar()
+        refRank = self.refRank()
+        rear = self.REAR()
         # derived from REAR so the two values can never drift out of sync
         rankScalar = rear / math.pow(math.log(11.93), powerScalar)
         return rankScalar * math.pow(math.log((rank / refRank * 10.93) + 1), powerScalar)
@@ -70,8 +110,7 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
     def _marginLambda(self, gSigned):
         """gSigned is the EAR gap from the eventual winner's perspective
         (negative for an underdog win)."""
-        marginDivisor = toDouble(self.opt.get("marginDivisor", 750))
-        return 1.093 * math.exp(gSigned / marginDivisor)
+        return 1.093 * math.exp(gSigned / self.marginDivisor())
 
     def _losingScoreLambda(self, netStyle, margin):
         """v1.093-revised losing-team-score lambda: large margins now
@@ -137,6 +176,16 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
         aRes.setScore(awayScore)
         return (hRes, aRes)
 
+    def _etDecisiveProbability(self, gAbs):
+        """t: probability ET produces a decisive result (no shootout).
+        Matches the sheet's CL column exactly: MAX(0.4, ...), not a hard
+        cutoff at gAbs=10 (the two are only *approximately* equal there)."""
+        return max(0.4, 0.3109 * math.pow(gAbs, 0.1093) + 1 / 10930)
+
+    def _etFavouriteWinProbability(self, t):
+        """w: given a decisive ET result, probability the favourite wins."""
+        return 0.5 if t == 0.4 else 1.093 * math.pow(t, 0.837)
+
     def generateETScore(self, home, away, str_):
         home = home.clone()
         away = away.clone()
@@ -145,15 +194,12 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
         g = hEAR - aEAR
         gAbs = abs(g)
 
-        if gAbs > 10:
-            t = 0.3109 * math.pow(gAbs, 0.1093) + 1 / 10930
-        else:
-            t = 0.4
+        t = self._etDecisiveProbability(gAbs)
 
         scoreType = ("score" if str_ == "" else str_)
 
         if self.s.randUniform() < t:  # decisive result, i.e. no shootout needed
-            w = 0.5 if t == 0.4 else 1.093 * math.pow(t, 0.837)
+            w = self._etFavouriteWinProbability(t)
             favouriteIsHome = (hEAR >= aEAR)
             homeWins = (self.s.randUniform() < w) == favouriteIsHome
 
