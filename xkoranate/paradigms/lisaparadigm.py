@@ -137,6 +137,16 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
         aRes.setScore(awayScore)
         return (hRes, aRes)
 
+    def _etDecisiveProbability(self, gAbs):
+        """t: probability ET produces a decisive result (no shootout).
+        Matches the sheet's CL column exactly: MAX(0.4, ...), not a hard
+        cutoff at gAbs=10 (the two are only *approximately* equal there)."""
+        return max(0.4, 0.3109 * math.pow(gAbs, 0.1093) + 1 / 10930)
+
+    def _etFavouriteWinProbability(self, t):
+        """w: given a decisive ET result, probability the favourite wins."""
+        return 0.5 if t == 0.4 else 1.093 * math.pow(t, 0.837)
+
     def generateETScore(self, home, away, str_):
         home = home.clone()
         away = away.clone()
@@ -145,15 +155,12 @@ class XkorLISAParadigm(XkorAbstractH2HParadigm):
         g = hEAR - aEAR
         gAbs = abs(g)
 
-        if gAbs > 10:
-            t = 0.3109 * math.pow(gAbs, 0.1093) + 1 / 10930
-        else:
-            t = 0.4
+        t = self._etDecisiveProbability(gAbs)
 
         scoreType = ("score" if str_ == "" else str_)
 
         if self.s.randUniform() < t:  # decisive result, i.e. no shootout needed
-            w = 0.5 if t == 0.4 else 1.093 * math.pow(t, 0.837)
+            w = self._etFavouriteWinProbability(t)
             favouriteIsHome = (hEAR >= aEAR)
             homeWins = (self.s.randUniform() < w) == favouriteIsHome
 

@@ -86,4 +86,19 @@ lam_small_margin = p750._losingScoreLambda(netStyle=0, margin=1)
 lam_large_margin = p750._losingScoreLambda(netStyle=0, margin=8)
 assert lam_large_margin < lam_small_margin, (lam_small_margin, lam_large_margin)
 
+# --- extra-time decisive-result probability (t) and favourite-win-given-
+#     decisive probability (w), checked against the sheet's CL/CM columns
+#     (CL5=MAX(0.4,...), not the forum prose's approximated gAbs>10 cutoff) ---
+
+p_et = make_paradigm()
+t_small_gap = p_et._etDecisiveProbability(5)
+assert approx(t_small_gap, 0.4), t_small_gap  # floored below the ~9.99 crossover
+
+t_big_gap = p_et._etDecisiveProbability(350)
+assert approx(t_big_gap, 0.58987, tol=1e-4), t_big_gap
+w_big_gap = p_et._etFavouriteWinProbability(t_big_gap)
+assert approx(w_big_gap, 0.70265, tol=1e-4), w_big_gap
+
+assert p_et._etFavouriteWinProbability(0.4) == 0.5  # floored t always splits 50/50
+
 print("ALL LISA PARADIGM TESTS PASSED")
